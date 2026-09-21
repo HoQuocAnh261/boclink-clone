@@ -76,20 +76,23 @@ export function initDB() {
     db.exec(`ALTER TABLE links ADD COLUMN domain TEXT NULL;`);
   } catch (e) {}
 
-  // Khởi tạo danh sách các domain mẫu phù hợp cho dân Affiliate (như phim24h.online...)
+  // Khởi tạo danh sách các domain mẫu ban đầu nếu bảng domains đang trống
   try {
-    const defaultDomains = [
-      'phim24h.online',
-      'reviewdeal.online',
-      'dealhot.link',
-      'linkvip.me',
-      'boclink.vn'
-    ];
-    for (const d of defaultDomains) {
-      db.prepare(`
-        INSERT OR IGNORE INTO domains (domain, is_default, status)
-        VALUES (?, 1, 'active')
-      `).run(d);
+    const row: any = db.prepare('SELECT count(*) as count FROM domains').get();
+    if (row && row.count === 0) {
+      const defaultDomains = [
+        'phim24h.online',
+        'reviewdeal.online',
+        'dealhot.link',
+        'linkvip.me',
+        'boclink.vn'
+      ];
+      for (const d of defaultDomains) {
+        db.prepare(`
+          INSERT OR IGNORE INTO domains (domain, is_default, status)
+          VALUES (?, 1, 'active')
+        `).run(d);
+      }
     }
   } catch (e) {}
 }

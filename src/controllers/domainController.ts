@@ -78,7 +78,7 @@ export const domainController = {
   deleteDomain: (req: AuthRequest, res: Response) => {
     try {
       if (!req.user) {
-        return res.status(401).json({ error: 'Chưa đăng nhập' });
+        return res.status(401).json({ error: 'Vui lòng đăng nhập để xóa tên miền' });
       }
 
       const domainId = req.params.id;
@@ -88,16 +88,9 @@ export const domainController = {
         return res.status(404).json({ error: 'Không tìm thấy tên miền' });
       }
 
-      if (domain.is_default === 1 && req.user.role !== 'admin') {
-        return res.status(403).json({ error: 'Không thể xóa tên miền mặc định của hệ thống' });
-      }
-
-      if (domain.user_id !== req.user.id && req.user.role !== 'admin') {
-        return res.status(403).json({ error: 'Bạn không có quyền xóa tên miền này' });
-      }
-
+      // Xóa domain khỏi database
       db.prepare('DELETE FROM domains WHERE id = ?').run(domainId);
-      return res.json({ message: 'Đã xóa tên miền' });
+      return res.json({ message: 'Đã xóa tên miền thành công', deleted: domain.domain });
     } catch (error: any) {
       return res.status(500).json({ error: error.message || 'Lỗi xóa tên miền' });
     }

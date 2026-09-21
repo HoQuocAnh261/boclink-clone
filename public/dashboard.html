@@ -511,17 +511,17 @@
               listEl.innerHTML = '<div class="text-slate-500 text-center py-4">Chưa có tên miền nào</div>';
             } else {
               listEl.innerHTML = allDomains.map(d => `
-                <div class="flex items-center justify-between p-3 bg-slate-900 rounded-xl border border-slate-800">
+                <div class="flex items-center justify-between p-3 bg-slate-900 rounded-xl border border-slate-800 hover:border-slate-700 transition">
                   <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-globe text-emerald-400 text-xs"></i>
                     <span class="font-mono font-bold text-white text-xs">${escapeHtml(d.domain)}</span>
                     ${d.is_default ? '<span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-semibold">Mặc định</span>' : '<span class="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 text-[10px] font-semibold">Tùy chỉnh</span>'}
                   </div>
                   <div>
-                    ${!d.is_default ? `
-                      <button onclick="deleteDomain(${d.id})" class="text-red-400 hover:text-red-300 px-2 py-1 rounded bg-red-500/10 hover:bg-red-500/20 transition text-xs font-semibold" title="Xóa domain">
-                        <i class="fa-solid fa-trash-can me-1"></i> Xóa
-                      </button>
-                    ` : '<span class="text-slate-500 text-[11px] italic">Hệ thống</span>'}
+                    <button onclick="deleteDomain(${d.id}, '${escapeHtml(d.domain)}')" class="text-red-400 hover:text-white hover:bg-red-600 px-2.5 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 transition text-xs font-semibold flex items-center gap-1.5" title="Xóa tên miền ${escapeHtml(d.domain)}">
+                      <i class="fa-solid fa-trash-can"></i>
+                      <span>Xóa</span>
+                    </button>
                   </div>
                 </div>
               `).join('');
@@ -578,8 +578,9 @@
       });
     }
 
-    async function deleteDomain(id) {
-      if (!confirm('Bạn có chắc chắn muốn xóa tên miền này?')) return;
+    async function deleteDomain(id, domainName) {
+      const nameText = domainName ? ` "${domainName}"` : '';
+      if (!confirm(`Bạn có chắc chắn muốn xóa tên miền${nameText}?`)) return;
       try {
         const res = await fetch(`/api/domains/${id}`, { method: 'DELETE' });
         const data = await res.json();
