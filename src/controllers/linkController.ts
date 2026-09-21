@@ -18,7 +18,7 @@ export const linkController = {
   // Rút gọn link (khách hoặc user đã đăng nhập)
   shorten: async (req: AuthRequest, res: Response) => {
     try {
-      let { url, custom_slug, type, title, password } = req.body;
+      let { url, custom_slug, type, title, password, domain } = req.body;
 
       if (!url) {
         return res.status(400).json({ error: 'Vui lòng cung cấp đường dẫn URL hợp lệ' });
@@ -59,19 +59,20 @@ export const linkController = {
         } while (attempts < 10);
       }
 
-      const linkType = ['direct', 'cloak', 'deeplink'].includes(type) ? type : 'cloak';
+      const linkType = ['direct', 'cloak', 'deeplink'].includes(type) ? type : 'direct';
       const userId = req.user ? req.user.id : null;
       const linkTitle = title ? title.trim() : (new URL(url)).hostname;
+      const selectedDomain = domain ? domain.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '') : null;
 
       const stmt = db.prepare(`
-        INSERT INTO links (user_id, title, original_url, slug, type, password)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO links (user_id, title, original_url, slug, type, password, domain)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
       `);
-      const result = stmt.run(userId, linkTitle, url, slug, linkType, password || null);
+      const result = stmt.run(userId, linkTitle, url, slug, linkType, password || null, selectedDomain);
       const linkId = Number(result.lastInsertRowid);
 
       const baseUrl = config.getBaseUrl(req);
-      const shortUrl = `${baseUrl}/${slug}`;
+      const shortUrl = selectedDomain ? `https://${selectedDomain}/${slug}` : `${baseUrl}/${slug}`;
       const qrCodeDataUrl = await QRCode.toDataURL(shortUrl, { width: 250, margin: 2 });
 
       return res.status(201).json({
@@ -82,6 +83,7 @@ export const linkController = {
           original_url: url,
           slug,
           type: linkType,
+          domain: selectedDomain,
           short_url: shortUrl,
           qr_code: qrCodeDataUrl,
           created_at: new Date().toISOString()
@@ -111,7 +113,7 @@ export const linkController = {
       const baseUrl = config.getBaseUrl(req);
       const mapped = (links as any[]).map(link => ({
         ...link,
-        short_url: `${baseUrl}/${link.slug}`
+        short_url: link.domain ? `https://${link.domain}/${link.slug}` : `${baseUrl}/${link.slug}`
       }));
 
       return res.json({ links: mapped });
@@ -175,7 +177,7 @@ export const linkController = {
       return res.json({
         link: {
           ...link,
-          short_url: `${baseUrl}/${link.slug}`
+          short_url: link.domain ? `https://${link.domain}/${link.slug}` : `${baseUrl}/${link.slug}`
         },
         analytics: {
           dailyClicks,

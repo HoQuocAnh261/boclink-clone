@@ -8,6 +8,7 @@ import { initDB, db } from './db/index.js';
 import { authController } from './controllers/authController.js';
 import { linkController } from './controllers/linkController.js';
 import { redirectController } from './controllers/redirectController.js';
+import { domainController } from './controllers/domainController.js';
 import { optionalAuth, requireAuth, hashPassword } from './utils/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -72,6 +73,11 @@ app.get('/api/links/dashboard/overview', requireAuth, linkController.getDashboar
 app.get('/api/links/:id/analytics', requireAuth, linkController.getLinkAnalytics);
 app.put('/api/links/:id', requireAuth, linkController.updateLink);
 app.delete('/api/links/:id', requireAuth, linkController.deleteLink);
+
+// API Custom Domain Routes
+app.get('/api/domains', optionalAuth, domainController.getDomains);
+app.post('/api/domains', requireAuth, domainController.addDomain);
+app.delete('/api/domains/:id', requireAuth, domainController.deleteDomain);
 
 // Dynamic Redirect Route (:slug) - Cần đặt ở cuối cùng
 app.get('/:slug', redirectController.handleRedirect);

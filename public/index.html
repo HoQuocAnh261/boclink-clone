@@ -110,18 +110,27 @@
             </div>
 
             <!-- Khối tùy chọn nâng cao -->
-            <div id="advancedOptions" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-slate-800">
+            <div id="advancedOptions" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2 border-t border-slate-800">
               <div>
                 <label class="block text-xs font-medium text-slate-400 mb-1.5">Bí danh tùy chỉnh (Slug)</label>
-                <input type="text" id="customSlug" placeholder="deal-shopee-99k"
+                <input type="text" id="customSlug" placeholder="deal-hot-99k"
                        class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:border-emerald-500">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1.5">Tên miền hiển thị (Domain)</label>
+                <select id="linkDomain" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:border-emerald-500">
+                  <option value="">Mặc định (Domain hệ thống)</option>
+                  <option value="phim24h.online" selected>phim24h.online (Khuyên dùng)</option>
+                  <option value="reviewdeal.online">reviewdeal.online</option>
+                  <option value="dealhot.link">dealhot.link</option>
+                  <option value="linkvip.me">linkvip.me</option>
+                </select>
               </div>
               <div>
                 <label class="block text-xs font-medium text-slate-400 mb-1.5">Cơ chế chuyển hướng</label>
                 <select id="linkType" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:border-emerald-500">
-                  <option value="deeplink">Smart Deeplink (Mở thẳng App Shopee/TikTok)</option>
-                  <option value="cloak" selected>Bọc Link Cloaking (Ẩn link, chống quét Facebook)</option>
-                  <option value="direct">Direct 302 (Rút gọn link thông thường)</option>
+                  <option value="direct" selected>Direct 302 (Nhảy thẳng App)</option>
+                  <option value="cloak">Bọc Link Cloaking (Chống quét Facebook)</option>
                 </select>
               </div>
               <div>
@@ -249,6 +258,26 @@
     }
     checkAuth();
 
+    async function loadDomains() {
+      try {
+        const res = await fetch('/api/domains');
+        if (res.ok) {
+          const data = await res.json();
+          const domains = data.domains || [];
+          const selectEl = document.getElementById('linkDomain');
+          if (selectEl && domains.length > 0) {
+            let html = '<option value="">Mặc định (Domain hệ thống)</option>';
+            domains.forEach(d => {
+              const isSel = d.domain === 'phim24h.online';
+              html += `<option value="${d.domain}" ${isSel ? 'selected' : ''}>${d.domain}${d.is_default ? ' (Khuyên dùng)' : ''}</option>`;
+            });
+            selectEl.innerHTML = html;
+          }
+        }
+      } catch (err) {}
+    }
+    loadDomains();
+
     function toggleAdvanced() {
       const adv = document.getElementById('advancedOptions');
       const isHidden = adv.classList.contains('hidden');
@@ -268,6 +297,7 @@
       e.preventDefault();
       const url = document.getElementById('originalUrl').value.trim();
       const custom_slug = document.getElementById('customSlug').value.trim();
+      const domain = document.getElementById('linkDomain').value;
       const type = document.getElementById('linkType').value;
       const password = document.getElementById('linkPassword').value.trim();
 
@@ -279,7 +309,7 @@
         const res = await fetch('/api/links/shorten', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url, custom_slug, type, password })
+          body: JSON.stringify({ url, custom_slug, type, password, domain })
         });
 
         const data = await res.json();

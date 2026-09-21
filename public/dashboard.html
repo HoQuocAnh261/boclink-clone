@@ -105,9 +105,14 @@
                class="w-full pl-9 pr-4 py-2.5 bg-slate-900 border border-slate-700/80 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500">
       </div>
 
-      <button onclick="openCreateModal()" class="px-5 py-2.5 bg-gradient-brand hover:opacity-90 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/30 transition">
-        <i class="fa-solid fa-plus"></i> Tạo Link Bọc Mới
-      </button>
+      <div class="flex items-center gap-3">
+        <button onclick="openDomainModal()" class="px-4 py-2.5 bg-slate-800/90 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xs flex items-center justify-center gap-2 border border-slate-700 transition">
+          <i class="fa-solid fa-globe text-emerald-400"></i> Quản Lý Tên Miền
+        </button>
+        <button onclick="openCreateModal()" class="px-5 py-2.5 bg-gradient-brand hover:opacity-90 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/30 transition">
+          <i class="fa-solid fa-plus"></i> Tạo Link Bọc Mới
+        </button>
+      </div>
     </div>
 
     <!-- Table of Links -->
@@ -165,19 +170,29 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
+            <label class="block font-medium text-slate-300 mb-1">Tên miền hiển thị (Domain)</label>
+            <select id="mDomain" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-emerald-500">
+              <option value="">Mặc định (Domain hệ thống)</option>
+              <option value="phim24h.online" selected>phim24h.online (Khuyên dùng)</option>
+              <option value="reviewdeal.online">reviewdeal.online</option>
+              <option value="dealhot.link">dealhot.link</option>
+              <option value="linkvip.me">linkvip.me</option>
+            </select>
+          </div>
+
+          <div>
             <label class="block font-medium text-slate-300 mb-1">Bí danh tùy chỉnh (Slug)</label>
             <input type="text" id="mSlug" placeholder="san-sale-shopee"
                    class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-emerald-500">
           </div>
+        </div>
 
-          <div>
-            <label class="block font-medium text-slate-300 mb-1">Cơ chế bọc link</label>
-            <select id="mType" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-emerald-500">
-              <option value="deeplink">Smart Deeplink (Mở App Shopee/TikTok)</option>
-              <option value="cloak" selected>Bọc Link Cloaking (Chống quét Facebook)</option>
-              <option value="direct">Direct 302 (Rút gọn link thuần)</option>
-            </select>
-          </div>
+        <div>
+          <label class="block font-medium text-slate-300 mb-1">Cơ chế chuyển hướng</label>
+          <select id="mType" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-emerald-500">
+            <option value="direct" selected>Direct 302 (Nhảy thẳng App - Chuẩn phim24h.online)</option>
+            <option value="cloak">Bọc Link Cloaking (Chống quét Facebook)</option>
+          </select>
         </div>
 
         <div>
@@ -255,8 +270,54 @@
     </div>
   </div>
 
+  <!-- Modal Quản Lý Tên Miền (Custom Domains) -->
+  <div id="domainModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+    <div class="card-glass max-w-xl w-full p-6 rounded-2xl shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-globe text-emerald-400"></i> Quản Lý Tên Miền Tùy Chỉnh (Custom Domains)
+        </h3>
+        <button onclick="closeDomainModal()" class="text-slate-400 hover:text-white text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Form Thêm Domain Mới -->
+      <form id="addDomainForm" class="mb-6 p-4 bg-slate-900/60 rounded-xl border border-slate-800">
+        <label class="block text-xs font-bold text-slate-300 mb-1.5">Thêm tên miền bạn sở hữu (Ví dụ: phim24h.online, dealhot.link)</label>
+        <div class="flex gap-2">
+          <input type="text" id="newDomainInput" required placeholder="phim24h.online"
+                 class="flex-1 px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500">
+          <button type="submit" id="btnAddDomain" class="px-4 py-2 bg-gradient-brand text-white font-bold text-xs rounded-xl hover:opacity-90 transition whitespace-nowrap">
+            <i class="fa-solid fa-plus me-1"></i> Thêm Domain
+          </button>
+        </div>
+      </form>
+
+      <!-- Danh sách domain -->
+      <div class="mb-6">
+        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Danh sách tên miền khả dụng</h4>
+        <div id="domainsList" class="space-y-2 text-xs">
+          <div class="text-slate-500 text-center py-4">Đang tải...</div>
+        </div>
+      </div>
+
+      <!-- Hướng dẫn DNS -->
+      <div class="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs text-slate-300 leading-relaxed">
+        <div class="font-bold text-emerald-400 flex items-center gap-1.5 mb-1.5">
+          <i class="fa-solid fa-circle-check"></i> Hướng dẫn trỏ tên miền (DNS Record)
+        </div>
+        <p class="text-slate-400 mb-2">Để tên miền của bạn hoạt động với server này, hãy vào trang quản lý domain của bạn (Cloudflare, Namecheap, v.v.) và thêm bản ghi:</p>
+        <div class="p-2 bg-slate-900 rounded-lg font-mono text-[11px] text-emerald-300 select-all border border-slate-800">
+          Loại: <b>CNAME</b> | Tên: <b>@</b> hoặc <b>link</b> | Giá trị: <b>boclink-clone.onrender.com</b>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     let allLinks = [];
+    let allDomains = [];
 
     async function loadDashboard() {
       try {
@@ -285,6 +346,9 @@
           allLinks = data.links;
           renderLinks(allLinks);
         }
+
+        // Tải danh sách tên miền
+        await loadDomains();
       } catch (err) {
         console.error('Error loading dashboard:', err);
       }
@@ -418,13 +482,119 @@
     }
 
     // Modal Create
-    function openCreateModal() { document.getElementById('createModal').classList.remove('hidden'); }
+    function openCreateModal() { 
+      document.getElementById('createModal').classList.remove('hidden'); 
+      loadDomains();
+    }
     function closeCreateModal() { document.getElementById('createModal').classList.add('hidden'); }
+
+    // Modal Domain
+    function openDomainModal() {
+      document.getElementById('domainModal').classList.remove('hidden');
+      loadDomains();
+    }
+    function closeDomainModal() {
+      document.getElementById('domainModal').classList.add('hidden');
+    }
+
+    async function loadDomains() {
+      try {
+        const res = await fetch('/api/domains');
+        if (res.ok) {
+          const data = await res.json();
+          allDomains = data.domains || [];
+
+          // Render danh sách trong Modal Quản Lý Domain
+          const listEl = document.getElementById('domainsList');
+          if (listEl) {
+            if (allDomains.length === 0) {
+              listEl.innerHTML = '<div class="text-slate-500 text-center py-4">Chưa có tên miền nào</div>';
+            } else {
+              listEl.innerHTML = allDomains.map(d => `
+                <div class="flex items-center justify-between p-3 bg-slate-900 rounded-xl border border-slate-800">
+                  <div class="flex items-center gap-2">
+                    <span class="font-mono font-bold text-white text-xs">${escapeHtml(d.domain)}</span>
+                    ${d.is_default ? '<span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-semibold">Mặc định</span>' : '<span class="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 text-[10px] font-semibold">Tùy chỉnh</span>'}
+                  </div>
+                  <div>
+                    ${!d.is_default ? `
+                      <button onclick="deleteDomain(${d.id})" class="text-red-400 hover:text-red-300 px-2 py-1 rounded bg-red-500/10 hover:bg-red-500/20 transition text-xs font-semibold" title="Xóa domain">
+                        <i class="fa-solid fa-trash-can me-1"></i> Xóa
+                      </button>
+                    ` : '<span class="text-slate-500 text-[11px] italic">Hệ thống</span>'}
+                  </div>
+                </div>
+              `).join('');
+            }
+          }
+
+          // Cập nhật select options trong Modal Tạo Link
+          const mDomainSelect = document.getElementById('mDomain');
+          if (mDomainSelect) {
+            const currentSelected = mDomainSelect.value;
+            let optionsHtml = '<option value="">Mặc định (Domain hệ thống)</option>';
+            allDomains.forEach(d => {
+              const isSel = (currentSelected === d.domain) || (!currentSelected && d.domain === 'phim24h.online');
+              optionsHtml += `<option value="${escapeHtml(d.domain)}" ${isSel ? 'selected' : ''}>${escapeHtml(d.domain)}${d.is_default ? ' (Khuyên dùng)' : ''}</option>`;
+            });
+            mDomainSelect.innerHTML = optionsHtml;
+          }
+        }
+      } catch (err) {
+        console.error('Lỗi tải danh sách domain:', err);
+      }
+    }
+
+    const addDomainForm = document.getElementById('addDomainForm');
+    if (addDomainForm) {
+      addDomainForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const domainInput = document.getElementById('newDomainInput');
+        const domainVal = domainInput.value.trim();
+        if (!domainVal) return;
+
+        const btn = document.getElementById('btnAddDomain');
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin me-1"></i> Đang thêm...`;
+
+        try {
+          const res = await fetch('/api/domains', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ domain: domainVal })
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Lỗi thêm tên miền');
+
+          domainInput.value = '';
+          alert('Đã thêm tên miền thành công: ' + data.domain.domain);
+          loadDomains();
+        } catch (err) {
+          alert(err.message);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = `<i class="fa-solid fa-plus me-1"></i> Thêm Domain`;
+        }
+      });
+    }
+
+    async function deleteDomain(id) {
+      if (!confirm('Bạn có chắc chắn muốn xóa tên miền này?')) return;
+      try {
+        const res = await fetch(`/api/domains/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Lỗi xóa tên miền');
+        loadDomains();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
 
     document.getElementById('modalCreateForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const title = document.getElementById('mTitle').value.trim();
       const url = document.getElementById('mUrl').value.trim();
+      const domain = document.getElementById('mDomain') ? document.getElementById('mDomain').value.trim() : '';
       const custom_slug = document.getElementById('mSlug').value.trim();
       const type = document.getElementById('mType').value;
       const password = document.getElementById('mPassword').value.trim();
@@ -433,7 +603,7 @@
         const res = await fetch('/api/links/shorten', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, url, custom_slug, type, password })
+          body: JSON.stringify({ title, url, domain, custom_slug, type, password })
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Lỗi tạo link');
