@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark" class="c_darkmode">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Đăng nhập tài khoản - BoclinkVN</title>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      background-color: #0b111e;
+      color: #e2e8f0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+    .min-vh-100 { min-height: 100vh; }
+    .btn-primary {
+      background: linear-gradient(135deg, #06557c 0%, #32af5e 100%) !important;
+      border: none !important;
+      transition: all 0.3s ease !important;
+      font-weight: 600;
+      border-radius: 8px;
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #32af5e 0%, #06557c 100%) !important;
+      box-shadow: 0 10px 25px -5px rgba(50, 175, 94, 0.4) !important;
+      transform: translateY(-2px);
+    }
+    .form-control {
+      background-color: #161f30 !important;
+      border: 1px solid #2d3748 !important;
+      color: #fff !important;
+      border-radius: 8px !important;
+      padding: 0.75rem 1rem !important;
+    }
+    .form-control:focus {
+      border-color: #32af5e !important;
+      box-shadow: 0 0 0 0.25rem rgba(50, 175, 94, 0.25) !important;
+    }
+    .form-floating label {
+      color: #94a3b8 !important;
+    }
+    .gradient-primary {
+      background: linear-gradient(135deg, #06557c 0%, #1a365d 50%, #32af5e 100%);
+    }
+    .brand-logo {
+      font-size: 1.6rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #38bdf8 0%, #34d399 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-decoration: none;
+    }
+    .btn-social {
+      width: 48px;
+      height: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #2d3748;
+      border-radius: 50%;
+      background-color: #161f30;
+      transition: 0.2s;
+    }
+    .btn-social:hover {
+      background-color: #243048;
+      border-color: #4a5568;
+    }
+  </style>
+</head>
+<body>
+  <a href="/" class="position-absolute top-0 start-0 text-decoration-none d-block ps-4 pt-4 z-3">
+    <div class="brand-logo"><i class="fa-solid fa-link text-emerald-400 me-2"></i>Boclink<span class="text-white">VN</span></div>
+  </a>
+
+  <section class="position-relative overflow-hidden">
+    <div class="container-fluid d-flex flex-column p-0">
+      <div class="row g-0 align-items-center justify-content-center justify-content-lg-start min-vh-100">
+        
+        <!-- Cột Form Đăng nhập -->
+        <div class="col-sm-8 col-md-6 col-lg-6 col-xl-6 py-5 py-md-0 d-flex justify-content-center">
+          <div class="col-11 col-lg-9 col-xl-7">
+            <div class="text-center mb-4">
+              <h3 class="fw-bold text-white">Chào mừng trở lại</h3>
+              <p class="text-muted small">Đăng nhập tài khoản để quản lý liên kết và xem thống kê</p>
+            </div>
+
+            <div id="alert-box" class="alert alert-danger d-none" role="alert"></div>
+
+            <div class="py-2 text-center">
+              <span class="small fw-bold text-uppercase text-muted" style="letter-spacing: 1px;">Đăng nhập nhanh</span>
+            </div>
+            
+            <div class="d-flex justify-content-center mb-4">
+              <button type="button" onclick="quickDemoLogin()" class="btn btn-social" title="Đăng nhập tài khoản Demo">
+                <i class="fa-solid fa-user-astronaut text-info fs-5"></i>
+              </button>
+            </div>
+
+            <div class="text-center position-relative mb-4">
+              <hr class="border-secondary opacity-25">
+              <span class="position-absolute top-50 start-50 translate-middle px-3 text-muted text-uppercase small" style="background-color: #0b111e;">HOẶC</span>
+            </div>
+
+            <form id="loginForm">
+              <div class="mb-3">
+                <div class="form-floating">
+                  <input type="email" class="form-control" name="email" id="input-email" placeholder="name@domain.com" required>
+                  <label for="input-email">Địa chỉ Email</label>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <div class="form-floating">
+                  <input type="password" class="form-control" name="password" id="input-pass" placeholder="Mật khẩu" required>
+                  <label for="input-pass">Mật khẩu</label>
+                </div>
+                <div class="d-flex mt-2 justify-content-between">
+                  <span class="d-sm-none"><a href="/user/register" class="small text-emerald-400 text-decoration-none">Đăng ký ngay</a></span>
+                  <a href="#" onclick="alert('Vui lòng liên hệ quản trị viên để cấp lại mật khẩu.'); return false;" class="small text-muted ms-auto text-decoration-none">Quên mật khẩu?</a>
+                </div>
+              </div>
+
+              <div class="form-check my-3 text-start">
+                <input class="form-check-input" type="checkbox" value="1" name="rememberme" id="rememberme" checked>
+                <label class="form-check-label text-muted small" for="rememberme">Ghi nhớ đăng nhập</label>
+              </div>
+
+              <div class="d-grid mt-4">
+                <button type="submit" id="btnSubmit" class="btn btn-primary py-2.5">
+                  <span id="btnText">Đăng nhập</span>
+                  <span id="btnSpinner" class="spinner-border spinner-border-sm d-none ms-2" role="status"></span>
+                </button>
+              </div>
+            </form>
+
+            <div class="text-center mt-5 text-muted small">
+              &copy; 2026 <a href="/" class="text-emerald-400 text-decoration-none fw-bold">BoclinkVN</a>. All Rights Reserved.
+            </div>
+          </div>
+        </div>
+
+        <!-- Cột Phải Banner Gradient -->
+        <div class="gradient-primary position-absolute h-100 top-0 end-0 zindex-10 col-lg-6 col-xl-6 d-none d-lg-flex flex-column justify-content-center">
+          <div class="position-relative zindex-10 p-5 text-center text-white mx-auto" style="max-width: 520px;">
+            <div class="mb-4">
+              <i class="fa-solid fa-shield-halved display-3 text-white opacity-75"></i>
+            </div>
+            <h3 class="fw-bold mb-3">Chưa có tài khoản BoclinkVN?</h3>
+            <p class="opacity-75 mb-4 leading-relaxed">
+              Bắt đầu chiến dịch affiliate marketing của bạn ngay bây giờ với các tính năng bọc link an toàn, deeplink mở thẳng App và báo cáo lượt click chuyên nghiệp.
+            </p>
+            <a href="/user/register" class="btn btn-light text-dark fw-bold px-5 py-2.5 rounded-pill shadow-lg text-decoration-none">
+              Tạo tài khoản miễn phí
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    const alertBox = document.getElementById('alert-box');
+    const btnSubmit = document.getElementById('btnSubmit');
+    const btnText = document.getElementById('btnText');
+    const btnSpinner = document.getElementById('btnSpinner');
+
+    function showAlert(message, type = 'danger') {
+      alertBox.className = `alert alert-${type}`;
+      alertBox.textContent = message;
+      alertBox.classList.remove('d-none');
+    }
+
+    function quickDemoLogin() {
+      document.getElementById('input-email').value = 'admin@boclink.vn';
+      document.getElementById('input-pass').value = '123456';
+      form.dispatchEvent(new Event('submit'));
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      alertBox.classList.add('d-none');
+
+      btnSubmit.disabled = true;
+      btnSpinner.classList.remove('d-none');
+      btnText.textContent = 'Đang xử lý...';
+
+      const email = document.getElementById('input-email').value.trim();
+      const password = document.getElementById('input-pass').value;
+      const rememberme = document.getElementById('rememberme').checked;
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, rememberme })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || 'Đăng nhập thất bại');
+        }
+
+        showAlert('Đăng nhập thành công! Đang chuyển hướng...', 'success');
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 800);
+      } catch (err) {
+        showAlert(err.message);
+        btnSubmit.disabled = false;
+        btnSpinner.classList.add('d-none');
+        btnText.textContent = 'Đăng nhập';
+      }
+    });
+  </script>
+</body>
+</html>

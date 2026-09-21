@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BoclinkVN - Rút Gọn Link Affiliate, Bọc Link & Deeplink Tăng Tỷ Lệ Click</title>
+  <meta name="description" content="Công cụ rút gọn link, bọc link chống chặn Facebook/TikTok, smart deeplink mở thẳng App Shopee, Lazada và thống kê click thời gian thực.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              navy: '#06557c',
+              emerald: '#32af5e',
+              dark: '#0a0f1d',
+              card: '#131b2e'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .bg-gradient-brand {
+      background: linear-gradient(135deg, #06557c 0%, #32af5e 100%);
+    }
+    .text-gradient-brand {
+      background: linear-gradient(135deg, #38bdf8 0%, #34d399 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .card-glass {
+      background: rgba(19, 27, 46, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+  </style>
+</head>
+<body class="bg-brand-dark text-slate-100 min-h-screen flex flex-col font-sans selection:bg-emerald-500 selection:text-white">
+
+  <!-- Header / Navigation -->
+  <header class="border-b border-slate-800/80 sticky top-0 z-50 bg-brand-dark/90 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <a href="/" class="flex items-center space-x-3 text-decoration-none">
+        <div class="w-10 h-10 rounded-xl bg-gradient-brand flex items-center justify-center text-white shadow-lg shadow-emerald-900/30">
+          <i class="fa-solid fa-link text-lg"></i>
+        </div>
+        <span class="text-2xl font-black tracking-tight text-white">Boclink<span class="text-emerald-400">VN</span></span>
+      </a>
+
+      <div class="flex items-center space-x-3" id="authNav">
+        <a href="/user/login" class="text-sm font-medium px-4 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/80 transition">
+          Đăng nhập
+        </a>
+        <a href="/user/register" class="text-sm font-semibold px-5 py-2.5 rounded-xl bg-gradient-brand text-white shadow-lg shadow-emerald-900/30 hover:opacity-90 transition">
+          Đăng ký miễn phí
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <main class="flex-1">
+    <section class="relative pt-12 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <!-- Background Glow -->
+      <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute top-1/3 left-1/3 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="max-w-4xl mx-auto text-center relative z-10">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-6">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          Bọc Link Affiliate & Deeplink Thông Minh Số 1
+        </div>
+
+        <h1 class="text-4xl sm:text-6xl font-extrabold tracking-tight mb-6">
+          Rút gọn link, <span class="text-gradient-brand">Bọc link chống chặn</span> & Mở thẳng App
+        </h1>
+
+        <p class="text-base sm:text-lg text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+          Tối ưu hóa tỷ lệ chuyển đổi đơn hàng Affiliate Shopee, TikTok Shop, Lazada. Tự động kích hoạt ứng dụng trên điện thoại và bảo vệ link khỏi kiểm duyệt mạng xã hội.
+        </p>
+
+        <!-- Interactive Shorten Box -->
+        <div class="card-glass rounded-3xl p-6 sm:p-8 text-left shadow-2xl relative overflow-hidden">
+          <form id="shortenForm" class="space-y-4">
+            <!-- URL Input -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                Dán đường link gốc của bạn vào đây:
+              </label>
+              <div class="relative flex items-center">
+                <div class="absolute left-4 text-slate-500">
+                  <i class="fa-solid fa-globe"></i>
+                </div>
+                <input type="url" id="originalUrl" required placeholder="https://shopee.vn/product/... hoặc https://vt.tiktok.com/..."
+                       class="w-full pl-11 pr-4 py-4 bg-slate-900/90 border border-slate-700/80 rounded-2xl text-white placeholder-slate-500 text-sm sm:text-base focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition shadow-inner">
+              </div>
+            </div>
+
+            <!-- Tùy chọn nâng cao Toggle -->
+            <div class="pt-2">
+              <button type="button" onclick="toggleAdvanced()" class="text-xs font-medium text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 transition">
+                <i class="fa-solid fa-sliders"></i>
+                <span id="advToggleText">Hiển thị tùy chọn nâng cao (Bí danh, Loại bọc link, Mật khẩu)</span>
+              </button>
+            </div>
+
+            <!-- Khối tùy chọn nâng cao -->
+            <div id="advancedOptions" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-slate-800">
+              <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1.5">Bí danh tùy chỉnh (Slug)</label>
+                <input type="text" id="customSlug" placeholder="deal-shopee-99k"
+                       class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:border-emerald-500">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1.5">Cơ chế chuyển hướng</label>
+                <select id="linkType" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:border-emerald-500">
+                  <option value="deeplink">Smart Deeplink (Mở thẳng App Shopee/TikTok)</option>
+                  <option value="cloak" selected>Bọc Link Cloaking (Ẩn link, chống quét Facebook)</option>
+                  <option value="direct">Direct 302 (Rút gọn link thông thường)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1.5">Mật khẩu bảo vệ (Tùy chọn)</label>
+                <input type="password" id="linkPassword" placeholder="Để trống nếu không đặt"
+                       class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:border-emerald-500">
+              </div>
+            </div>
+
+            <!-- Nút bấm tạo link -->
+            <div class="pt-2">
+              <button type="submit" id="btnShorten" class="w-full py-4 px-6 bg-gradient-brand hover:opacity-95 text-white font-bold rounded-2xl shadow-xl shadow-emerald-950/40 flex items-center justify-center gap-2 text-base transition active:scale-[0.99]">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <span>Tạo Link Bọc / Rút Gọn Ngay</span>
+              </button>
+            </div>
+          </form>
+
+          <!-- Kết quả sau khi tạo -->
+          <div id="resultBox" class="hidden mt-6 pt-6 border-t border-slate-800">
+            <div class="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 mb-4">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <i class="fa-solid fa-circle-check"></i> Tạo link thành công!
+                </span>
+                <span id="resultTypeBadge" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300"></span>
+              </div>
+              <div class="flex items-center gap-2">
+                <input type="text" id="shortUrlResult" readonly class="w-full bg-slate-900/90 text-white font-mono text-sm px-4 py-2.5 rounded-xl border border-slate-700 select-all">
+                <button onclick="copyResult()" id="btnCopy" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 whitespace-nowrap">
+                  <i class="fa-solid fa-copy"></i> Copy
+                </button>
+              </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-slate-900/60 rounded-2xl border border-slate-800">
+              <div class="flex items-center gap-4">
+                <img id="qrCodeImg" src="" alt="Mã QR" class="w-20 h-20 rounded-xl bg-white p-1 border border-slate-700">
+                <div>
+                  <h4 class="text-sm font-bold text-white mb-1">Mã QR truy cập</h4>
+                  <p class="text-xs text-slate-400">Quét camera để mở trực tiếp trên điện thoại</p>
+                  <a id="btnDownloadQr" href="" download="boclink-qr.png" class="inline-block mt-2 text-xs font-semibold text-emerald-400 hover:underline">
+                    <i class="fa-solid fa-download me-1"></i> Tải ảnh QR code
+                  </a>
+                </div>
+              </div>
+              <div>
+                <a id="btnTestLink" href="" target="_blank" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition flex items-center gap-2">
+                  <i class="fa-solid fa-arrow-up-right-from-square"></i> Thử nghiệm mở link
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 3 Điểm nổi bật -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-slate-800/80">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        <div class="card-glass p-8 rounded-3xl">
+          <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl mb-6">
+            <i class="fa-solid fa-shield-cat"></i>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-2">Bọc link Cloaking chống quét</h3>
+          <p class="text-sm text-slate-400 leading-relaxed">
+            Ẩn link affiliate gốc, gắn meta no-referrer giúp link không bị bot Facebook/TikTok khóa tài khoản hoặc gắn cờ spam.
+          </p>
+        </div>
+
+        <div class="card-glass p-8 rounded-3xl">
+          <div class="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-400 flex items-center justify-center text-xl mb-6">
+            <i class="fa-solid fa-mobile-screen-button"></i>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-2">Smart Deeplink mở thẳng App</h3>
+          <p class="text-sm text-slate-400 leading-relaxed">
+            Người dùng click vào link trên Facebook/TikTok sẽ tự động mở ứng dụng Shopee hoặc TikTok Shop có sẵn tài khoản để thanh toán ngay.
+          </p>
+        </div>
+
+        <div class="card-glass p-8 rounded-3xl">
+          <div class="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-xl mb-6">
+            <i class="fa-solid fa-chart-pie"></i>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-2">Thống kê Click thời gian thực</h3>
+          <p class="text-sm text-slate-400 leading-relaxed">
+            Theo dõi chính xác số lượt click, loại thiết bị (Mobile/PC), hệ điều hành và nguồn truy cập để tối ưu chiến dịch quảng cáo.
+          </p>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800/80 py-8 bg-[#090d18] text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div>
+        &copy; 2026 <span class="text-white font-semibold">BoclinkVN</span>. Hệ thống bọc link affiliate 100% Free & Tự lưu trữ.
+      </div>
+      <div class="flex items-center space-x-6">
+        <a href="/user/login" class="hover:text-slate-300">Đăng nhập</a>
+        <a href="/user/register" class="hover:text-slate-300">Đăng ký</a>
+        <a href="/dashboard" class="hover:text-slate-300">Dashboard</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Kiểm tra trạng thái đăng nhập để cập nhật header
+    async function checkAuth() {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById('authNav').innerHTML = `
+            <a href="/dashboard" class="text-sm font-semibold px-4 py-2 rounded-xl bg-slate-800 text-emerald-400 hover:bg-slate-700 transition flex items-center gap-2">
+              <i class="fa-solid fa-chart-line"></i> Dashboard (${data.user.name})
+            </a>
+          `;
+        }
+      } catch (err) {}
+    }
+    checkAuth();
+
+    function toggleAdvanced() {
+      const adv = document.getElementById('advancedOptions');
+      const isHidden = adv.classList.contains('hidden');
+      if (isHidden) {
+        adv.classList.remove('hidden');
+        document.getElementById('advToggleText').textContent = 'Thu gọn tùy chọn nâng cao';
+      } else {
+        adv.classList.add('hidden');
+        document.getElementById('advToggleText').textContent = 'Hiển thị tùy chọn nâng cao (Bí danh, Loại bọc link, Mật khẩu)';
+      }
+    }
+
+    const shortenForm = document.getElementById('shortenForm');
+    const resultBox = document.getElementById('resultBox');
+
+    shortenForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const url = document.getElementById('originalUrl').value.trim();
+      const custom_slug = document.getElementById('customSlug').value.trim();
+      const type = document.getElementById('linkType').value;
+      const password = document.getElementById('linkPassword').value.trim();
+
+      const btn = document.getElementById('btnShorten');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i> <span>Đang xử lý...</span>`;
+
+      try {
+        const res = await fetch('/api/links/shorten', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, custom_slug, type, password })
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || 'Lỗi tạo link');
+        }
+
+        document.getElementById('shortUrlResult').value = data.link.short_url;
+        document.getElementById('qrCodeImg').src = data.link.qr_code;
+        document.getElementById('btnDownloadQr').href = data.link.qr_code;
+        document.getElementById('btnTestLink').href = data.link.short_url;
+        
+        const badge = document.getElementById('resultTypeBadge');
+        if (data.link.type === 'deeplink') badge.textContent = 'Smart Deeplink';
+        else if (data.link.type === 'cloak') badge.textContent = 'Bọc Link Cloaking';
+        else badge.textContent = 'Direct 302';
+
+        resultBox.classList.remove('hidden');
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> <span>Tạo Link Bọc / Rút Gọn Ngay</span>`;
+      }
+    });
+
+    function copyResult() {
+      const input = document.getElementById('shortUrlResult');
+      input.select();
+      navigator.clipboard.writeText(input.value);
+      const btn = document.getElementById('btnCopy');
+      btn.innerHTML = `<i class="fa-solid fa-check"></i> Đã Copy!`;
+      setTimeout(() => {
+        btn.innerHTML = `<i class="fa-solid fa-copy"></i> Copy`;
+      }, 2000);
+    }
+  </script>
+</body>
+</html>
