@@ -173,8 +173,14 @@ export const redirectController = {
 
                 <a href="${destination}" id="btnWebFallback"
                    class="block w-full py-3 px-4 bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white text-xs font-semibold rounded-2xl border border-slate-700/80 transition">
-                  Tiếp tục qua trình duyệt web
+                  Tiếp tục xem trên Web
                 </a>
+              </div>
+
+              <!-- Hướng dẫn khi mở trong trình duyệt nhúng Facebook / Zalo -->
+              <div id="inAppTip" class="hidden mt-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-2xl text-[11px] text-blue-300 text-left flex items-start gap-2">
+                <i class="fa-solid fa-circle-info text-blue-400 mt-0.5"></i>
+                <span>Bạn đang mở trong Facebook. Hãy bấm nút <b>"MỞ TRONG APP"</b> ở trên, hoặc bấm dấu <b>•••</b> góc trên bên phải chọn <b>"Mở trong trình duyệt hệ thống"</b>.</span>
               </div>
 
               <div class="mt-6 pt-4 border-t border-slate-800/80 text-[11px] text-slate-500 flex items-center justify-center gap-1">
@@ -192,10 +198,17 @@ export const redirectController = {
               const androidIntent = ${JSON.stringify(deeplink.androidIntent || null)};
               const androidScheme = ${JSON.stringify(deeplink.androidScheme || null)};
               const webUrl = ${JSON.stringify(destination)};
+              const isShop = ${JSON.stringify(!!deeplink.isShopProduct)};
 
               const ua = navigator.userAgent || navigator.vendor || window.opera;
               const isAndroid = /android/i.test(ua);
               const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+              const isInApp = /FBAN|FBAV|FB_IAB|Instagram|Zalo/i.test(ua);
+
+              if (isInApp) {
+                const tip = document.getElementById('inAppTip');
+                if (tip) tip.classList.remove('hidden');
+              }
 
               let targetScheme = webUrl;
               if (isAndroid) {
@@ -215,7 +228,6 @@ export const redirectController = {
                 }
               }
 
-              // Khi chuyển app thành công, trình duyệt sẽ bị blur hoặc hidden
               window.addEventListener('blur', clearFallback);
               window.addEventListener('pagehide', clearFallback);
               document.addEventListener('visibilitychange', function() {
@@ -227,10 +239,15 @@ export const redirectController = {
                 clearFallback();
 
                 if (isAndroid) {
-                  // Trên Android: dùng Intent URL là cách duy nhất kích hoạt app trực tiếp từ Chrome/FB
+                  // Trên Android: kích hoạt Intent trực tiếp
                   window.location.href = targetScheme;
+                  setTimeout(function() {
+                    if (!document.hidden && androidScheme && androidScheme !== targetScheme) {
+                      window.location.href = androidScheme;
+                    }
+                  }, 800);
                 } else if (isIOS) {
-                  // Trên iOS: dùng scheme chính, nếu lỗi dùng scheme phụ
+                  // Trên iOS: kích hoạt schema chính
                   window.location.href = targetScheme;
                   setTimeout(function() {
                     if (iosAltScheme && !document.hidden) {
@@ -243,23 +260,23 @@ export const redirectController = {
                 }
               }
 
-              // Tự động kích hoạt khi vừa tải trang
+              // Tự động kích hoạt khi vừa tải trang trên Mobile
               if (isAndroid || isIOS) {
                 try {
                   triggerOpenApp();
                 } catch(e) {}
 
-                // Fallback sau 5s nếu người dùng chưa mở app và trang vẫn hiển thị
+                // Fallback sau 4 giây nếu app chưa được kích hoạt
                 fallbackTimer = setTimeout(function() {
                   if (!document.hidden) {
-                    console.log('App not opened, fallback to web');
+                    console.log('App did not open, staying on fallback');
                   }
-                }, 5000);
+                }, 4000);
               } else {
-                // Người dùng trên PC / Desktop: chuyển thẳng vào link web sau 1 giây
+                // Desktop: chuyển thẳng vào link web sau 1.2 giây
                 setTimeout(function() {
                   window.location.href = webUrl;
-                }, 1000);
+                }, 1200);
               }
             </script>
           </body>

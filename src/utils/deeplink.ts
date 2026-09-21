@@ -5,6 +5,8 @@
 export interface DeeplinkInfo {
   isDeeplinkable: boolean;
   platform: string;
+  isShopProduct?: boolean;
+  productId?: string;
   iosScheme?: string;
   iosAltScheme?: string;
   androidIntent?: string;
@@ -21,35 +23,74 @@ export function parseDeeplink(urlStr: string): DeeplinkInfo {
 
     // 1. TikTok / TikTok Shop / vt.tiktok.com
     if (host.includes('tiktok.com') || host.includes('vt.tiktok.com')) {
-      // Kiểm tra nếu là link video có ID cụ thể (ví dụ: /video/1234567890)
-      const videoMatch = url.pathname.match(/\/video\/(\d+)/) || url.pathname.match(/\/detail\/(\d+)/);
-      // Kiểm tra nếu là profile (@username)
-      const userMatch = url.pathname.match(/\/@([a-zA-Z0-9._]+)/);
+      // A. KIỂM TRA SẢN PHẨM TIKTOK SHOP (PDP)
+      // Các dạng: /vn/pdp/1729601281544456787, /view/product/1729..., ?product_id=1729...
+      const pdpMatch = url.pathname.match(/\/pdp\/(\d+)/) || 
+                       url.pathname.match(/\/product\/(\d+)/) ||
+                       url.pathname.match(/\/view\/product\/(\d+)/);
+      const queryProductId = url.searchParams.get('product_id');
+      const productId = (pdpMatch && pdpMatch[1]) || queryProductId;
 
-      let iosScheme = `snssdk1233://webview?url=${encodedUrl}`;
-      let iosAltScheme = `tiktok://webview?url=${encodedUrl}`;
+      if (productId) {
+        // Schema chính xác nhất để mở thẳng vào trang chi tiết sản phẩm TikTok Shop
+        const iosScheme = `snssdk1233://ec/pdp?product_id=${productId}`;
+        const iosAltScheme = `tiktok://ec/pdp?product_id=${productId}`;
+        
+        // Android Intent nhắm thẳng vào ecommerce product detail page của TikTok
+        const androidIntent = `intent://ec/pdp?product_id=${productId}#Intent;package=com.zhiliaoapp.musically;scheme=snssdk1233;end;`;
+        const androidScheme = `snssdk1233://ec/pdp?product_id=${productId}`;
 
-      if (videoMatch && videoMatch[1]) {
-        const videoId = videoMatch[1];
-        iosScheme = `snssdk1233://aweme/detail/${videoId}`;
-        iosAltScheme = `tiktok://aweme/detail/${videoId}`;
-      } else if (userMatch && userMatch[1]) {
-        const username = userMatch[1];
-        iosScheme = `snssdk1233://user/profile/${username}`;
-        iosAltScheme = `tiktok://user/profile/${username}`;
+        return {
+          isDeeplinkable: true,
+          platform: 'TikTok Shop',
+          isShopProduct: true,
+          productId,
+          iosScheme,
+          iosAltScheme,
+          androidIntent,
+          androidScheme,
+          originalUrl: urlStr
+        };
       }
 
-      // Android Intent - Cơ chế kích hoạt app TikTok mạnh nhất trên Android
-      const androidIntent = `intent://${urlWithoutProtocol}#Intent;package=com.zhiliaoapp.musically;scheme=https;end;`;
-      const androidScheme = `snssdk1233://webview?url=${encodedUrl}`;
+      // B. KIỂM TRA LINK VIDEO TIKTOK (/video/1234567890 hoặc /detail/...)
+      const videoMatch = url.pathname.match(/\/video\/(\d+)/) || url.pathname.match(/\/detail\/(\d+)/);
+      if (videoMatch && videoMatch[1]) {
+        const videoId = videoMatch[1];
+        return {
+          isDeeplinkable: true,
+          platform: 'TikTok',
+          iosScheme: `snssdk1233://aweme/detail/${videoId}`,
+          iosAltScheme: `tiktok://aweme/detail/${videoId}`,
+          androidIntent: `intent://aweme/detail/${videoId}#Intent;package=com.zhiliaoapp.musically;scheme=snssdk1233;end;`,
+          androidScheme: `snssdk1233://aweme/detail/${videoId}`,
+          originalUrl: urlStr
+        };
+      }
 
+      // C. KIỂM TRA PROFILE NGƯỜI DÙNG (@username)
+      const userMatch = url.pathname.match(/\/@([a-zA-Z0-9._]+)/);
+      if (userMatch && userMatch[1]) {
+        const username = userMatch[1];
+        return {
+          isDeeplinkable: true,
+          platform: 'TikTok',
+          iosScheme: `snssdk1233://user/profile/${username}`,
+          iosAltScheme: `tiktok://user/profile/${username}`,
+          androidIntent: `intent://user/profile/${username}#Intent;package=com.zhiliaoapp.musically;scheme=snssdk1233;end;`,
+          androidScheme: `snssdk1233://user/profile/${username}`,
+          originalUrl: urlStr
+        };
+      }
+
+      // D. CÁC LINK TIKTOK KHÁC (vt.tiktok.com, link affiliate tổng)
       return {
         isDeeplinkable: true,
         platform: 'TikTok',
-        iosScheme,
-        iosAltScheme,
-        androidIntent,
-        androidScheme,
+        iosScheme: `snssdk1233://webview?url=${encodedUrl}`,
+        iosAltScheme: `tiktok://webview?url=${encodedUrl}`,
+        androidIntent: `intent://${urlWithoutProtocol}#Intent;package=com.zhiliaoapp.musically;scheme=https;end;`,
+        androidScheme: `snssdk1233://webview?url=${encodedUrl}`,
         originalUrl: urlStr
       };
     }

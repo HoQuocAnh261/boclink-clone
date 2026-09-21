@@ -3,3 +3,4 @@ data/*.sqlite*
 dist/
 .env
 *.log
+cloudflared.exe
