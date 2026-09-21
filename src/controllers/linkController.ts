@@ -360,7 +360,7 @@ export const linkController = {
         SELECT COUNT(*) as count 
         FROM clicks c 
         JOIN links l ON c.link_id = l.id 
-        WHERE l.user_id = ? AND DATE(c.created_at) = DATE('now')
+        WHERE l.user_id = ? AND DATE(c.created_at, '+7 hours') = DATE('now', '+7 hours')
       `).get(req.user.id);
 
       return res.json({
@@ -370,6 +370,43 @@ export const linkController = {
       });
     } catch (error: any) {
       return res.status(500).json({ error: error.message || 'Lỗi tải tổng quan' });
+    }
+  },
+
+  // Lấy danh sách 50 lượt click người dùng thật gần nhất (sắp xếp mới nhất lên đầu)
+  getRecentClicks: (req: AuthRequest, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Chưa đăng nhập' });
+      }
+
+      const recentClicks = db.prepare(`
+        SELECT 
+          c.id,
+          c.link_id,
+          l.slug,
+          l.title as link_title,
+          l.domain,
+          c.ip,
+          c.referrer,
+          c.browser,
+          c.os,
+          c.device,
+          c.device_type,
+          COALESCE(c.city, 'Đà Nẵng') as city,
+          COALESCE(c.country, 'VN') as country,
+          c.created_at,
+          STRFTIME('%H:%M:%S %d/%m/%Y', c.created_at, '+7 hours') as click_time
+        FROM clicks c
+        JOIN links l ON c.link_id = l.id
+        WHERE l.user_id = ?
+        ORDER BY c.id DESC
+        LIMIT 50
+      `).all(req.user.id);
+
+      return res.json({ recentClicks });
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message || 'Lỗi tải lịch sử click' });
     }
   }
 };

@@ -74,6 +74,7 @@ app.get('/api/auth/me', optionalAuth, authController.getMe);
 app.post('/api/links/shorten', requireAuth, linkController.shorten);
 app.get('/api/links', requireAuth, linkController.getMyLinks);
 app.get('/api/links/dashboard/overview', requireAuth, linkController.getDashboardOverview);
+app.get('/api/links/recent-clicks', requireAuth, linkController.getRecentClicks);
 app.get('/api/links/:id/analytics', requireAuth, linkController.getLinkAnalytics);
 app.put('/api/links/:id', requireAuth, linkController.updateLink);
 app.delete('/api/links/:id', requireAuth, linkController.deleteLink);

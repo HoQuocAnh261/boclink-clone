@@ -141,6 +141,51 @@
       </div>
     </div>
 
+    <!-- Bảng Lịch Sử Click Người Dùng Thật (Tự Động Hiển Thị Trực Tiếp - Mới Nhất Lên Đầu) -->
+    <div class="card-glass rounded-2xl overflow-hidden shadow-xl mt-8">
+      <div class="p-5 border-b border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-900/40">
+        <div>
+          <h3 class="text-base font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-bolt text-amber-400"></i> Lịch Sử Click Người Dùng Thật
+            <span class="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/30 flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Thời gian gần nhất đứng đầu
+            </span>
+          </h3>
+          <p class="text-xs text-slate-400 mt-1">Bảng tự động liệt kê trực tiếp các lượt click người dùng thật mà không cần mở biểu đồ</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="loadRecentClicksTable()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-xs flex items-center gap-1.5 border border-slate-700 transition">
+            <i class="fa-solid fa-arrows-rotate" id="iconRefreshClicks"></i> Làm mới
+          </button>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto max-h-[480px] overflow-y-auto">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead class="bg-slate-950/90 sticky top-0 text-[11px] text-slate-400 border-b border-slate-800 uppercase font-semibold z-10 backdrop-blur-sm">
+            <tr>
+              <th class="py-3 px-4 whitespace-nowrap">Thời gian (Giờ VN)</th>
+              <th class="py-3 px-4 whitespace-nowrap">Liên kết (Link)</th>
+              <th class="py-3 px-4 whitespace-nowrap">Tỉnh / Thành phố</th>
+              <th class="py-3 px-4 whitespace-nowrap">Thiết bị</th>
+              <th class="py-3 px-4 whitespace-nowrap">Hệ điều hành</th>
+              <th class="py-3 px-4 whitespace-nowrap">Ứng dụng / Trình duyệt</th>
+              <th class="py-3 px-4 whitespace-nowrap">Địa chỉ IP</th>
+              <th class="py-3 px-4 whitespace-nowrap">Nguồn</th>
+            </tr>
+          </thead>
+          <tbody id="dashboardRecentClicksBody" class="divide-y divide-slate-800/60">
+            <tr>
+              <td colspan="8" class="py-8 text-center text-slate-500">
+                <i class="fa-solid fa-circle-notch animate-spin text-base mb-2"></i>
+                <div>Đang tải lịch sử click...</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </main>
 
   <!-- Modal Tạo Link Mới -->
@@ -541,8 +586,98 @@
 
         // Tải danh sách tên miền
         await loadDomains();
+
+        // Tải bảng lịch sử click trực tiếp (sắp xếp gần nhất lên đầu)
+        await loadRecentClicksTable();
       } catch (err) {
         console.error('Error loading dashboard:', err);
+      }
+    }
+
+    // Tự động tải bảng lịch sử click người dùng thật trên Dashboard
+    async function loadRecentClicksTable() {
+      const tbody = document.getElementById('dashboardRecentClicksBody');
+      if (!tbody) return;
+
+      const icon = document.getElementById('iconRefreshClicks');
+      if (icon) icon.classList.add('fa-spin');
+
+      try {
+        const res = await fetch('/api/links/recent-clicks');
+        if (!res.ok) throw new Error('Không thể tải lịch sử click');
+        const data = await res.json();
+        const clicks = data.recentClicks || [];
+
+        if (clicks.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="8" class="py-10 text-center text-slate-500">
+                <i class="fa-solid fa-chart-line text-2xl mb-2 opacity-40"></i>
+                <div class="font-medium text-xs">Chưa có lượt click người dùng thật nào</div>
+                <p class="text-[11px] text-slate-500 mt-1">Các lượt click từ điện thoại, Facebook, Zalo sẽ tự động xuất hiện tại đây</p>
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = clicks.map(c => {
+          let appBadge = `<span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 text-[11px] font-medium border border-slate-700/60">${escapeHtml(c.browser || 'Khác')}</span>`;
+          if ((c.browser || '').includes('Facebook')) {
+            appBadge = `<span class="px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300 text-[11px] font-semibold border border-blue-500/30 flex items-center gap-1 w-fit"><i class="fa-brands fa-facebook"></i> Facebook App</span>`;
+          } else if ((c.browser || '').includes('Zalo')) {
+            appBadge = `<span class="px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-300 text-[11px] font-semibold border border-sky-500/30 flex items-center gap-1 w-fit"><i class="fa-solid fa-comment-dots"></i> Zalo App</span>`;
+          } else if ((c.browser || '').includes('TikTok')) {
+            appBadge = `<span class="px-2 py-0.5 rounded-md bg-pink-500/20 text-pink-300 text-[11px] font-semibold border border-pink-500/30 flex items-center gap-1 w-fit"><i class="fa-brands fa-tiktok"></i> TikTok App</span>`;
+          }
+
+          let devIcon = '<i class="fa-solid fa-laptop text-slate-400 me-1.5"></i>';
+          if ((c.device_type || '').includes('Điện thoại') || (c.device || '').includes('iPhone') || (c.device || '').includes('Samsung') || (c.os || '').includes('Android') || (c.os || '').includes('iOS')) {
+            devIcon = '<i class="fa-solid fa-mobile-screen text-emerald-400 me-1.5"></i>';
+          }
+
+          const shortUrl = c.domain ? `https://${c.domain}/${c.slug}` : `/${c.slug}`;
+
+          return `
+            <tr class="hover:bg-slate-800/40 transition">
+              <td class="py-3 px-4 font-mono text-emerald-400 font-semibold whitespace-nowrap">
+                <i class="fa-regular fa-clock text-[10px] me-1 text-slate-500"></i>${escapeHtml(c.click_time || '')}
+              </td>
+              <td class="py-3 px-4 whitespace-nowrap">
+                <div class="flex items-center gap-1.5">
+                  <a href="${shortUrl}" target="_blank" class="font-mono text-blue-400 hover:underline font-bold text-xs" title="${escapeHtml(c.link_title || '')}">
+                    /${escapeHtml(c.slug)}
+                  </a>
+                  <span class="text-[10px] text-slate-400 truncate max-w-[130px]" title="${escapeHtml(c.link_title || '')}">
+                    (${escapeHtml(c.link_title || '')})
+                  </span>
+                </div>
+              </td>
+              <td class="py-3 px-4 whitespace-nowrap text-amber-300 font-medium">
+                <i class="fa-solid fa-location-dot text-red-400 text-[10px] me-1"></i>${escapeHtml(c.city || 'Đà Nẵng')}
+              </td>
+              <td class="py-3 px-4 whitespace-nowrap font-medium text-white">
+                <div class="flex items-center">${devIcon}${escapeHtml(c.device || 'Không xác định')}</div>
+              </td>
+              <td class="py-3 px-4 whitespace-nowrap text-slate-300">
+                ${escapeHtml(c.os || '')}
+              </td>
+              <td class="py-3 px-4 whitespace-nowrap">
+                ${appBadge}
+              </td>
+              <td class="py-3 px-4 font-mono text-slate-400 whitespace-nowrap text-[11px]">
+                ${escapeHtml(c.ip || '')}
+              </td>
+              <td class="py-3 px-4 whitespace-nowrap text-slate-400 text-[11px]">
+                ${escapeHtml(c.referrer || 'Direct')}
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (err) {
+        console.error('Lỗi tải bảng click trực tiếp:', err);
+      } finally {
+        if (icon) setTimeout(() => icon.classList.remove('fa-spin'), 400);
       }
     }
 
@@ -1081,6 +1216,9 @@
     }
 
     loadDashboard();
+
+    // Tự động làm mới bảng lịch sử click mỗi 10 giây trong nền
+    setInterval(loadRecentClicksTable, 10000);
   </script>
 </body>
 </html>
