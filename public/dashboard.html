@@ -357,11 +357,11 @@
         <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
           <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
             <span class="text-slate-400 text-[11px]">Tổng Click Thật (VN)</span>
-            <div class="text-lg font-bold text-white mt-1" id="statTotalClicks">0</div>
+            <div class="text-lg font-bold text-white mt-1" id="modalTotalClicks">0</div>
           </div>
           <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
             <span class="text-slate-400 text-[11px]">Hôm Nay (Giờ VN)</span>
-            <div class="text-lg font-bold text-emerald-400 mt-1" id="statTodayClicks">0</div>
+            <div class="text-lg font-bold text-emerald-400 mt-1" id="modalTodayClicks">0</div>
           </div>
           <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
             <span class="text-slate-400 text-[11px]">Thiết Bị Hàng Đầu</span>
@@ -931,13 +931,13 @@
 
         // Tổng quan
         const total = data.link.clicks || 0;
-        document.getElementById('statTotalClicks').textContent = total.toLocaleString();
+        document.getElementById('modalTotalClicks').textContent = total.toLocaleString();
 
         let todayCount = 0;
         if (data.analytics.dailyClicks && data.analytics.dailyClicks.length > 0) {
           todayCount = data.analytics.dailyClicks[data.analytics.dailyClicks.length - 1].count;
         }
-        document.getElementById('statTodayClicks').textContent = `+${todayCount}`;
+        document.getElementById('modalTodayClicks').textContent = `+${todayCount}`;
 
         const topDev = (data.analytics.deviceTypes && data.analytics.deviceTypes.length > 0)
           ? `${data.analytics.deviceTypes[0].device_type} (${data.analytics.deviceTypes[0].count})`

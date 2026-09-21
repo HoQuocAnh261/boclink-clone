@@ -108,16 +108,15 @@ export const redirectController = {
       const isBot = isCrawlerBot(userAgentRaw);
 
       // 1. NẾU LÀ BOT QUÉT LINK (Facebook Crawler, Zalo Bot, Googlebot...):
-      // TUYỆT ĐỐI KHÔNG TÍNH CLICK!
+      // Trả về thẻ OpenGraph HTML để Facebook/Zalo/Telegram ghim đích đến là mozphim.online
+      // TUYỆT ĐỐI KHÔNG TÍNH CLICK CHO BOT!
       if (isBot) {
-        // Nếu có tùy chỉnh preview -> Trả về thẻ OpenGraph HTML để Facebook/Zalo hiển thị đúng poster & tiêu đề
-        if (link.og_title || link.og_image) {
-          const ogTitle = link.og_title || link.title || 'Ưu đãi hấp dẫn';
-          const ogDesc = link.og_description || 'Bấm để xem chi tiết sản phẩm và ưu đãi trên ứng dụng.';
-          const ogImg = link.og_image || '';
-          const shortUrl = link.domain ? `https://${link.domain}/${link.slug}` : `https://${req.get('host')}/${link.slug}`;
+        const ogTitle = link.og_title || link.title || 'Mở trên ứng dụng';
+        const ogDesc = link.og_description || 'Bấm để xem chi tiết sản phẩm và ưu đãi trên ứng dụng.';
+        const ogImg = link.og_image || '';
+        const shortUrl = link.domain ? `https://${link.domain}/${link.slug}` : `https://${req.get('host')}/${link.slug}`;
 
-          return res.send(`<!DOCTYPE html>
+        return res.send(`<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
@@ -149,18 +148,8 @@ export const redirectController = {
   </script>
 </body>
 </html>`);
-        }
-
-        // Nếu không tùy chỉnh preview -> Trả mã 302 trực tiếp để Facebook nhận diện là link TikTok/Shopee gốc
-        res.writeHead(302, {
-          'Location': destination,
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'X-Content-Type-Options': 'nosniff',
-          'Content-Length': '0'
-        });
-        return res.end();
       }
+
 
       // 2. NGƯỜI DÙNG THẬT TRUY CẬP:
       // Phân tích IP chuẩn (hỗ trợ qua Cloudflare proxy / Render)

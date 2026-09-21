@@ -85,6 +85,11 @@ app.delete('/api/domains/:id', requireAuth, domainController.deleteDomain);
 
 // API Backup Database (Tải file database về máy)
 app.get('/api/system/backup-db', requireAuth, (req, res) => {
+  try {
+    db.pragma('wal_checkpoint(FULL)');
+  } catch (e) {
+    console.error('WAL checkpoint error:', e);
+  }
   const dbFile = path.resolve(__dirname, '../data/boclink.sqlite');
   res.download(dbFile, 'boclink-backup.sqlite');
 });
