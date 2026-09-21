@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { db } from '../db/index.js';
 import { parseDeeplink } from '../utils/deeplink.js';
-import { isCrawlerBot, parseDeviceInfo } from '../utils/deviceParser.js';
+import { isCrawlerBot, parseDeviceInfo, getGeoLocation } from '../utils/deviceParser.js';
 
 function escapeHtml(text: string): string {
   if (!text) return '';
@@ -182,31 +182,41 @@ export const redirectController = {
         cleanReferrer = rawReferrer;
       }
 
-      // Phân tích thông tin Thiết bị, Hệ điều hành, App/Trình duyệt
-      const devInfo = parseDeviceInfo(userAgentRaw);
+      // Lấy thông tin vị trí địa lý & Cloudflare headers
+      const cfCountry = req.headers['cf-ipcountry'] as string | undefined;
+      const cfCity = req.headers['cf-ipcity'] as string | undefined;
+      const geoInfo = getGeoLocation(clientIp, cfCountry, cfCity);
 
-      // Mỗi ngày chỉ tính 1 click cho cùng 1 địa chỉ IP truy cập (theo ngày giờ Việt Nam GMT+7)
-      try {
-        const todayClick = db.prepare(`
-          SELECT id FROM clicks
-          WHERE link_id = ? 
-            AND ip = ? 
-            AND DATE(created_at, '+7 hours') = DATE('now', '+7 hours')
-          LIMIT 1
-        `).get(link.id, clientIp);
+      // YÊU CẦU: LOẠI TRỪ CÁC CLICK TỪ QUỐC GIA KHÁC VIỆT NAM
+      // Nếu KHÔNG phải từ Việt Nam -> Tuyệt đối không tính click (nhưng vẫn redirect cho người dùng)
+      if (geoInfo.isVietnam) {
+        // Phân tích thông tin Thiết bị, Hệ điều hành, App/Trình duyệt
+        const devInfo = parseDeviceInfo(userAgentRaw);
 
-        if (!todayClick) {
-          // IP này chưa click hôm nay -> Ghi nhận 1 lượt click người dùng thật
-          db.prepare(`
-            INSERT INTO clicks (link_id, ip, referrer, browser, os, device, device_type)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-          `).run(link.id, clientIp, cleanReferrer, devInfo.browser, devInfo.os, devInfo.device, devInfo.deviceType);
+        // Mỗi ngày chỉ tính 1 click cho cùng 1 địa chỉ IP truy cập (theo ngày giờ Việt Nam GMT+7)
+        try {
+          const todayClick = db.prepare(`
+            SELECT id FROM clicks
+            WHERE link_id = ? 
+              AND ip = ? 
+              AND DATE(created_at, '+7 hours') = DATE('now', '+7 hours')
+            LIMIT 1
+          `).get(link.id, clientIp);
 
-          db.prepare('UPDATE links SET clicks = clicks + 1 WHERE id = ?').run(link.id);
+          if (!todayClick) {
+            // IP này chưa click hôm nay -> Ghi nhận 1 lượt click người dùng thật từ Việt Nam
+            db.prepare(`
+              INSERT INTO clicks (link_id, ip, referrer, browser, os, device, device_type, country, city)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `).run(link.id, clientIp, cleanReferrer, devInfo.browser, devInfo.os, devInfo.device, devInfo.deviceType, geoInfo.country, geoInfo.city);
+
+            db.prepare('UPDATE links SET clicks = clicks + 1 WHERE id = ?').run(link.id);
+          }
+        } catch (err) {
+          console.error('Error logging real click:', err);
         }
-      } catch (err) {
-        console.error('Error logging real click:', err);
       }
+
 
       // 1. Chuyển hướng trực tiếp chuẩn như phim24h.online (Clean 302 Found, Content-Length: 0, no-cache)
       // Cho phép Facebook In-App Browser nhận lệnh chuyển hướng ngay lập tức và bung thẳng vào App TikTok/Shopee

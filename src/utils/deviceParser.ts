@@ -100,3 +100,94 @@ export function parseDeviceInfo(ua: string | undefined): DeviceInfo {
     os: fullOs
   };
 }
+
+
+import geoip from 'geoip-lite';
+
+export interface GeoInfo {
+  isVietnam: boolean;
+  country: string;
+  city: string;
+  location: string;
+}
+
+const VN_CITY_MAP: Record<string, string> = {
+  'ho chi minh city': 'TP. Hồ Chí Minh',
+  'ho chi minh': 'TP. Hồ Chí Minh',
+  'saigon': 'TP. Hồ Chí Minh',
+  'hanoi': 'Hà Nội',
+  'ha noi': 'Hà Nội',
+  'da nang': 'Đà Nẵng',
+  'danang': 'Đà Nẵng',
+  'hai phong': 'Hải Phòng',
+  'can tho': 'Cần Thơ',
+  'bien hoa': 'Biên Hòa',
+  'nha trang': 'Nha Trang',
+  'hue': 'Huế',
+  'vung tau': 'Vũng Tàu',
+  'buon ma thuot': 'Buôn Ma Thuột',
+  'quy nhon': 'Quy Nhơn',
+  'phan thiet': 'Phan Thiết',
+  'rach gia': 'Rạch Giá',
+  'long xuyen': 'Long Xuyên',
+  'thai nguyen': 'Thái Nguyên',
+  'bac ninh': 'Bắc Ninh',
+  'nam dinh': 'Nam Định',
+  'ha long': 'Hạ Long',
+  'vinh': 'Vinh',
+  'pleiku': 'Pleiku'
+};
+
+/**
+ * Xác định vị trí địa lý của IP và kiểm tra xem có phải từ Việt Nam không
+ */
+export function getGeoLocation(ip: string, cfCountry?: string, cfCity?: string): GeoInfo {
+  // Cho phép Localhost trong môi trường test/local
+  if (ip === '127.0.0.1' || ip === '::1' || ip.startsWith('192.168.') || ip.startsWith('10.')) {
+    return {
+      isVietnam: true,
+      country: 'VN',
+      city: 'Localhost',
+      location: 'Hà Nội, Việt Nam (Local)'
+    };
+  }
+
+  let countryCode = (cfCountry || '').trim().toUpperCase();
+  let cityName = (cfCity || '').trim();
+
+  // Tra cứu offline bằng geoip-lite
+  const geo = geoip.lookup(ip);
+  if (!countryCode || countryCode === 'XX' || countryCode === 'T1') {
+    if (geo) {
+      countryCode = geo.country || '';
+      if (!cityName && geo.city) {
+        cityName = geo.city;
+      }
+    }
+  } else if (!cityName && geo && geo.city) {
+    cityName = geo.city;
+  }
+
+  const isVietnam = countryCode === 'VN';
+
+  // Chuyển tên thành phố sang tiếng Việt chuẩn đẹp
+  let cleanCity = cityName;
+  if (cityName && VN_CITY_MAP[cityName.toLowerCase()]) {
+    cleanCity = VN_CITY_MAP[cityName.toLowerCase()];
+  }
+
+  let location = 'Không xác định';
+  if (isVietnam) {
+    location = cleanCity ? `${cleanCity}, VN` : 'Việt Nam';
+  } else if (countryCode) {
+    location = cleanCity ? `${cleanCity}, ${countryCode}` : countryCode;
+  }
+
+  return {
+    isVietnam,
+    country: countryCode || 'Khác',
+    city: cleanCity || 'Việt Nam',
+    location
+  };
+}
+

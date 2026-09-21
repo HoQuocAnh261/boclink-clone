@@ -66,6 +66,8 @@ export function initDB() {
       os TEXT,
       device TEXT,
       device_type TEXT,
+      country TEXT,
+      city TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (link_id) REFERENCES links(id) ON DELETE CASCADE
     );
@@ -76,9 +78,15 @@ export function initDB() {
     CREATE INDEX IF NOT EXISTS idx_clicks_link_ip ON clicks(link_id, ip, created_at);
   `);
 
-  // Thêm cột device_type vào clicks nếu chưa có
+  // Thêm cột device_type, country, city vào clicks nếu chưa có
   try {
     db.exec(`ALTER TABLE clicks ADD COLUMN device_type TEXT NULL;`);
+  } catch (e) {}
+  try {
+    db.exec(`ALTER TABLE clicks ADD COLUMN country TEXT NULL;`);
+  } catch (e) {}
+  try {
+    db.exec(`ALTER TABLE clicks ADD COLUMN city TEXT NULL;`);
   } catch (e) {}
 
   // Thêm các cột mới vào bảng links nếu trước đó chưa có

@@ -206,6 +206,19 @@ export const linkController = {
         LIMIT 10
       `).all(linkId);
 
+      // Thống kê theo vị trí địa lý (Tỉnh / Thành phố tại Việt Nam)
+      const locations = db.prepare(`
+        SELECT 
+          COALESCE(city, 'Việt Nam') as city, 
+          COALESCE(country, 'VN') as country, 
+          COUNT(*) as count
+        FROM clicks
+        WHERE link_id = ?
+        GROUP BY city
+        ORDER BY count DESC
+        LIMIT 10
+      `).all(linkId);
+
       // Danh sách 25 lượt click người dùng thật gần nhất
       const recentClicks = db.prepare(`
         SELECT 
@@ -216,6 +229,8 @@ export const linkController = {
           os, 
           device, 
           device_type, 
+          COALESCE(city, 'Việt Nam') as city,
+          COALESCE(country, 'VN') as country,
           STRFTIME('%H:%M:%S %d/%m/%Y', created_at, '+7 hours') as click_time
         FROM clicks
         WHERE link_id = ?
@@ -236,9 +251,11 @@ export const linkController = {
           browsers,
           referrers,
           osList,
+          locations,
           recentClicks
         }
       });
+
     } catch (error: any) {
       return res.status(500).json({ error: error.message || 'Lỗi lấy thống kê link' });
     }
