@@ -14,7 +14,7 @@ function escapeHtml(text: string): string {
 }
 
 export const redirectController = {
-  handleRedirect: (req: Request, res: Response) => {
+  handleRedirect: async (req: Request, res: Response) => {
     try {
       const slug = String(req.params.slug);
 
@@ -180,8 +180,7 @@ export const redirectController = {
       const cfCountry = req.headers['cf-ipcountry'] as string | undefined;
       const cfCity = req.headers['cf-ipcity'] as string | undefined;
       const acceptLang = req.headers['accept-language'] as string | undefined;
-      const geoInfo = getGeoLocation(clientIp, cfCountry, cfCity, acceptLang);
-
+      const geoInfo = await getGeoLocation(clientIp, cfCountry, cfCity, acceptLang);
 
       // YÊU CẦU: LOẠI TRỪ CÁC CLICK TỪ QUỐC GIA KHÁC VIỆT NAM
       // Nếu KHÔNG phải từ Việt Nam -> Tuyệt đối không tính click (nhưng vẫn redirect cho người dùng)
@@ -189,18 +188,18 @@ export const redirectController = {
         // Phân tích thông tin Thiết bị, Hệ điều hành, App/Trình duyệt
         const devInfo = parseDeviceInfo(userAgentRaw);
 
-        // Mỗi ngày chỉ tính 1 click cho cùng 1 địa chỉ IP truy cập (theo ngày giờ Việt Nam GMT+7)
+        // YÊU CẦU: ĐÃ BỎ GIỚI HẠN 1 CLICK/IP/NGÀY
+        // Mỗi lượt click của người dùng đều được tính đầy đủ (có debounce 3s chống duplicate do trình duyệt prefetch)
         try {
-          const todayClick = db.prepare(`
+          const duplicateClick = db.prepare(`
             SELECT id FROM clicks
             WHERE link_id = ? 
               AND ip = ? 
-              AND DATE(created_at, '+7 hours') = DATE('now', '+7 hours')
+              AND created_at >= DATETIME('now', '-3 seconds')
             LIMIT 1
           `).get(link.id, clientIp);
 
-          if (!todayClick) {
-            // IP này chưa click hôm nay -> Ghi nhận 1 lượt click người dùng thật từ Việt Nam
+          if (!duplicateClick) {
             db.prepare(`
               INSERT INTO clicks (link_id, ip, referrer, browser, os, device, device_type, country, city)
               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
