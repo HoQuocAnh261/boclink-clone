@@ -113,7 +113,7 @@ export const linkController = {
       const links = db.prepare(`
         SELECT 
           l.*,
-          (SELECT COUNT(*) FROM clicks c WHERE c.link_id = l.id AND DATE(c.created_at) = DATE('now')) AS clicks_today
+          (SELECT COUNT(*) FROM clicks c WHERE c.link_id = l.id AND DATE(c.created_at, '+7 hours') = DATE('now', '+7 hours')) AS clicks_today
         FROM links l
         WHERE l.user_id = ?
         ORDER BY l.created_at DESC
@@ -148,27 +148,57 @@ export const linkController = {
         return res.status(404).json({ error: 'Không tìm thấy link hoặc không có quyền xem' });
       }
 
-      // Thống kê theo ngày (7 ngày gần nhất)
+      // Thống kê theo ngày (7 ngày gần nhất, theo giờ Việt Nam GMT+7)
       const dailyClicks = db.prepare(`
-        SELECT DATE(created_at) as date, COUNT(*) as count
+        SELECT DATE(created_at, '+7 hours') as date, COUNT(*) as count
         FROM clicks
-        WHERE link_id = ? AND created_at >= DATE('now', '-7 days')
-        GROUP BY DATE(created_at)
+        WHERE link_id = ? AND created_at >= DATETIME('now', '-7 days')
+        GROUP BY DATE(created_at, '+7 hours')
         ORDER BY date ASC
       `).all(linkId);
 
-      // Thống kê theo thiết bị
+      // Thống kê theo loại thiết bị (Điện thoại / Máy tính / Tablet)
+      const deviceTypes = db.prepare(`
+        SELECT COALESCE(device_type, 'Máy tính') as device_type, COUNT(*) as count
+        FROM clicks
+        WHERE link_id = ?
+        GROUP BY device_type
+        ORDER BY count DESC
+      `).all(linkId);
+
+      // Thống kê theo model thiết bị chi tiết (Apple iPhone, Samsung...)
       const devices = db.prepare(`
-        SELECT device, COUNT(*) as count
+        SELECT COALESCE(device, 'Không xác định') as device, COUNT(*) as count
         FROM clicks
         WHERE link_id = ?
         GROUP BY device
         ORDER BY count DESC
+        LIMIT 10
+      `).all(linkId);
+
+      // Thống kê theo ứng dụng / trình duyệt (Facebook App, Zalo App, Safari, Chrome...)
+      const browsers = db.prepare(`
+        SELECT COALESCE(browser, 'Khác') as browser, COUNT(*) as count
+        FROM clicks
+        WHERE link_id = ?
+        GROUP BY browser
+        ORDER BY count DESC
+        LIMIT 10
+      `).all(linkId);
+
+      // Thống kê theo hệ điều hành (iOS, Android, Windows...)
+      const osList = db.prepare(`
+        SELECT COALESCE(os, 'Khác') as os, COUNT(*) as count
+        FROM clicks
+        WHERE link_id = ?
+        GROUP BY os
+        ORDER BY count DESC
+        LIMIT 10
       `).all(linkId);
 
       // Thống kê theo nguồn truy cập (referrer)
       const referrers = db.prepare(`
-        SELECT referrer, COUNT(*) as count
+        SELECT COALESCE(referrer, 'Direct') as referrer, COUNT(*) as count
         FROM clicks
         WHERE link_id = ?
         GROUP BY referrer
@@ -176,13 +206,21 @@ export const linkController = {
         LIMIT 10
       `).all(linkId);
 
-      // Thống kê theo hệ điều hành (OS)
-      const osList = db.prepare(`
-        SELECT os, COUNT(*) as count
+      // Danh sách 25 lượt click người dùng thật gần nhất
+      const recentClicks = db.prepare(`
+        SELECT 
+          id, 
+          ip, 
+          referrer, 
+          browser, 
+          os, 
+          device, 
+          device_type, 
+          STRFTIME('%H:%M:%S %d/%m/%Y', created_at, '+7 hours') as click_time
         FROM clicks
         WHERE link_id = ?
-        GROUP BY os
-        ORDER BY count DESC
+        ORDER BY id DESC
+        LIMIT 25
       `).all(linkId);
 
       const baseUrl = config.getBaseUrl(req);
@@ -193,15 +231,19 @@ export const linkController = {
         },
         analytics: {
           dailyClicks,
+          deviceTypes,
           devices,
+          browsers,
           referrers,
-          osList
+          osList,
+          recentClicks
         }
       });
     } catch (error: any) {
       return res.status(500).json({ error: error.message || 'Lỗi lấy thống kê link' });
     }
   },
+
 
   // Cập nhật link
   updateLink: (req: AuthRequest, res: Response) => {

@@ -334,11 +334,11 @@
 
   <!-- Modal Analytics Chi Tiết -->
   <div id="analyticsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-    <div class="card-glass max-w-2xl w-full p-6 rounded-2xl shadow-2xl relative max-h-[90vh] overflow-y-auto">
+    <div class="card-glass max-w-3xl w-full p-6 rounded-2xl shadow-2xl relative max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
         <div>
           <h3 class="text-base font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-chart-pie text-emerald-400"></i> Thống Kê Chi Tiết Liên Kết
+            <i class="fa-solid fa-chart-pie text-emerald-400"></i> Thống Kê Người Dùng Thật (1 IP = 1 Click / Ngày)
           </h3>
           <p class="text-xs text-slate-400 mt-1 font-mono" id="analyticsModalSlug"></p>
         </div>
@@ -347,34 +347,85 @@
         </button>
       </div>
 
-      <div id="analyticsContent" class="space-y-6 text-xs">
-        <!-- Devices & OS -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div class="p-4 bg-slate-900/60 rounded-xl border border-slate-800">
-            <h4 class="font-bold text-slate-200 mb-3 flex items-center gap-2">
-              <i class="fa-solid fa-mobile-screen text-blue-400"></i> Thiết bị (Device)
-            </h4>
-            <div id="deviceStats" class="space-y-2 text-slate-400"></div>
+      <div id="analyticsContent" class="space-y-5 text-xs">
+        <!-- Tổng quan Clicks -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="p-3.5 bg-slate-900/80 rounded-xl border border-slate-800">
+            <span class="text-slate-400 text-[11px]">Tổng Click Thật (Unique IP)</span>
+            <div class="text-xl font-bold text-white mt-1" id="statTotalClicks">0</div>
           </div>
-
-          <div class="p-4 bg-slate-900/60 rounded-xl border border-slate-800">
-            <h4 class="font-bold text-slate-200 mb-3 flex items-center gap-2">
-              <i class="fa-solid fa-laptop text-emerald-400"></i> Hệ điều hành (OS)
-            </h4>
-            <div id="osStats" class="space-y-2 text-slate-400"></div>
+          <div class="p-3.5 bg-slate-900/80 rounded-xl border border-slate-800">
+            <span class="text-slate-400 text-[11px]">Hôm Nay (Giờ VN)</span>
+            <div class="text-xl font-bold text-emerald-400 mt-1" id="statTodayClicks">0</div>
+          </div>
+          <div class="p-3.5 bg-slate-900/80 rounded-xl border border-slate-800">
+            <span class="text-slate-400 text-[11px]">Loại Thiết Bị Hàng Đầu</span>
+            <div class="text-sm font-bold text-blue-400 mt-1 truncate" id="statTopDevice">Đang tải...</div>
           </div>
         </div>
 
-        <!-- Referrers -->
-        <div class="p-4 bg-slate-900/60 rounded-xl border border-slate-800">
-          <h4 class="font-bold text-slate-200 mb-3 flex items-center gap-2">
+        <!-- 3 Cột: Thiết Bị | Ứng Dụng/Trình Duyệt | Hệ Điều Hành -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="p-3.5 bg-slate-900/60 rounded-xl border border-slate-800">
+            <h4 class="font-bold text-slate-200 mb-2.5 flex items-center gap-1.5">
+              <i class="fa-solid fa-mobile-screen text-blue-400"></i> Thiết bị (Model)
+            </h4>
+            <div id="deviceStats" class="space-y-1.5 text-slate-400 max-h-48 overflow-y-auto"></div>
+          </div>
+
+          <div class="p-3.5 bg-slate-900/60 rounded-xl border border-slate-800">
+            <h4 class="font-bold text-slate-200 mb-2.5 flex items-center gap-1.5">
+              <i class="fa-brands fa-facebook text-indigo-400"></i> Ứng dụng / Browser
+            </h4>
+            <div id="browserStats" class="space-y-1.5 text-slate-400 max-h-48 overflow-y-auto"></div>
+          </div>
+
+          <div class="p-3.5 bg-slate-900/60 rounded-xl border border-slate-800">
+            <h4 class="font-bold text-slate-200 mb-2.5 flex items-center gap-1.5">
+              <i class="fa-solid fa-laptop text-emerald-400"></i> Hệ điều hành (OS)
+            </h4>
+            <div id="osStats" class="space-y-1.5 text-slate-400 max-h-48 overflow-y-auto"></div>
+          </div>
+        </div>
+
+        <!-- Nguồn truy cập -->
+        <div class="p-3.5 bg-slate-900/60 rounded-xl border border-slate-800">
+          <h4 class="font-bold text-slate-200 mb-2 flex items-center gap-1.5">
             <i class="fa-solid fa-share-nodes text-purple-400"></i> Nguồn truy cập (Referrer)
           </h4>
-          <div id="referrerStats" class="space-y-2 text-slate-400"></div>
+          <div id="referrerStats" class="flex flex-wrap gap-2 text-slate-400"></div>
+        </div>
+
+        <!-- Bảng 25 Lượt Click Người Dùng Thật Gần Nhất -->
+        <div class="p-3.5 bg-slate-900/60 rounded-xl border border-slate-800">
+          <h4 class="font-bold text-slate-200 mb-2 flex items-center justify-between">
+            <span class="flex items-center gap-1.5">
+              <i class="fa-solid fa-list-check text-emerald-400"></i> Lịch Sử Click Người Dùng Thật (Unique IP / Ngày)
+            </span>
+            <span class="text-[10px] text-slate-500">Giờ Việt Nam (GMT+7)</span>
+          </h4>
+          <div class="overflow-x-auto max-h-60 overflow-y-auto">
+            <table class="w-full text-left border-collapse">
+              <thead class="bg-slate-950/80 sticky top-0 text-[11px] text-slate-400 border-b border-slate-800">
+                <tr>
+                  <th class="py-2 px-3">Thời gian</th>
+                  <th class="py-2 px-3">Địa chỉ IP</th>
+                  <th class="py-2 px-3">Thiết bị</th>
+                  <th class="py-2 px-3">HĐH</th>
+                  <th class="py-2 px-3">Ứng dụng / Browser</th>
+                  <th class="py-2 px-3">Nguồn</th>
+                </tr>
+              </thead>
+              <tbody id="recentClicksTable" class="divide-y divide-slate-800/50 text-[11px] text-slate-300">
+                <tr><td colspan="6" class="py-4 text-center text-slate-500">Chưa có lượt click người dùng thật</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
   </div>
+
 
   <!-- Modal QR Code -->
   <div id="qrModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
@@ -860,48 +911,116 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
 
+        // Tổng quan
+        const total = data.link.clicks || 0;
+        document.getElementById('statTotalClicks').textContent = total.toLocaleString();
+
+        let todayCount = 0;
+        if (data.analytics.dailyClicks && data.analytics.dailyClicks.length > 0) {
+          todayCount = data.analytics.dailyClicks[data.analytics.dailyClicks.length - 1].count;
+        }
+        document.getElementById('statTodayClicks').textContent = `+${todayCount}`;
+
+        const topDev = (data.analytics.deviceTypes && data.analytics.deviceTypes.length > 0)
+          ? `${data.analytics.deviceTypes[0].device_type} (${data.analytics.deviceTypes[0].count})`
+          : 'Chưa có';
+        document.getElementById('statTopDevice').textContent = topDev;
+
         // Render Devices
         const devBox = document.getElementById('deviceStats');
-        if (data.analytics.devices.length === 0) {
-          devBox.innerHTML = '<div class="text-slate-500">Chưa có lượt click nào ghi nhận</div>';
+        if (!data.analytics.devices || data.analytics.devices.length === 0) {
+          devBox.innerHTML = '<div class="text-slate-500 py-1">Chưa có click thật</div>';
         } else {
           devBox.innerHTML = data.analytics.devices.map(d => `
-            <div class="flex justify-between items-center py-1 border-b border-slate-800/60">
-              <span class="text-slate-300 font-medium">${d.device || 'Desktop / PC'}</span>
-              <span class="font-bold text-white">${d.count} clicks</span>
+            <div class="flex justify-between items-center py-1 border-b border-slate-800/40">
+              <span class="text-slate-300 truncate max-w-[150px]" title="${escapeHtml(d.device)}">${escapeHtml(d.device)}</span>
+              <span class="font-bold text-white">${d.count}</span>
             </div>
           `).join('');
         }
 
+        // Render Browsers / In-App
+        const browserBox = document.getElementById('browserStats');
+        if (!data.analytics.browsers || data.analytics.browsers.length === 0) {
+          browserBox.innerHTML = '<div class="text-slate-500 py-1">Chưa có dữ liệu</div>';
+        } else {
+          browserBox.innerHTML = data.analytics.browsers.map(b => {
+            let badgeClass = 'text-slate-300';
+            if (b.browser.includes('Facebook')) badgeClass = 'text-blue-400 font-semibold';
+            if (b.browser.includes('Zalo')) badgeClass = 'text-sky-400 font-semibold';
+            if (b.browser.includes('TikTok')) badgeClass = 'text-pink-400 font-semibold';
+            return `
+              <div class="flex justify-between items-center py-1 border-b border-slate-800/40">
+                <span class="${badgeClass} truncate max-w-[150px]">${escapeHtml(b.browser)}</span>
+                <span class="font-bold text-white">${b.count}</span>
+              </div>
+            `;
+          }).join('');
+        }
+
         // Render OS
         const osBox = document.getElementById('osStats');
-        if (data.analytics.osList.length === 0) {
-          osBox.innerHTML = '<div class="text-slate-500">Chưa có dữ liệu hệ điều hành</div>';
+        if (!data.analytics.osList || data.analytics.osList.length === 0) {
+          osBox.innerHTML = '<div class="text-slate-500 py-1">Chưa có dữ liệu</div>';
         } else {
           osBox.innerHTML = data.analytics.osList.map(o => `
-            <div class="flex justify-between items-center py-1 border-b border-slate-800/60">
-              <span class="text-slate-300 font-medium">${o.os || 'Khác'}</span>
-              <span class="font-bold text-white">${o.count} clicks</span>
+            <div class="flex justify-between items-center py-1 border-b border-slate-800/40">
+              <span class="text-slate-300 truncate max-w-[150px]">${escapeHtml(o.os)}</span>
+              <span class="font-bold text-white">${o.count}</span>
             </div>
           `).join('');
         }
 
         // Render Referrers
         const refBox = document.getElementById('referrerStats');
-        if (data.analytics.referrers.length === 0) {
-          refBox.innerHTML = '<div class="text-slate-500">Chưa có dữ liệu nguồn truy cập</div>';
+        if (!data.analytics.referrers || data.analytics.referrers.length === 0) {
+          refBox.innerHTML = '<div class="text-slate-500 py-1">Chưa có dữ liệu nguồn</div>';
         } else {
           refBox.innerHTML = data.analytics.referrers.map(r => `
-            <div class="flex justify-between items-center py-1 border-b border-slate-800/60">
-              <span class="text-slate-300 font-medium">${r.referrer}</span>
-              <span class="font-bold text-emerald-400">${r.count} clicks</span>
-            </div>
+            <span class="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700/60 text-slate-300 flex items-center gap-1">
+              <span class="text-purple-300 font-medium">${escapeHtml(r.referrer)}</span>
+              <span class="font-bold text-emerald-400 ms-1">${r.count}</span>
+            </span>
           `).join('');
+        }
+
+        // Render Recent Clicks Table
+        const recentBox = document.getElementById('recentClicksTable');
+        if (!data.analytics.recentClicks || data.analytics.recentClicks.length === 0) {
+          recentBox.innerHTML = '<tr><td colspan="6" class="py-4 text-center text-slate-500">Chưa có lượt click người dùng thật</td></tr>';
+        } else {
+          recentBox.innerHTML = data.analytics.recentClicks.map(c => {
+            let appBadge = `<span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 text-[10px]">${escapeHtml(c.browser || 'Khác')}</span>`;
+            if ((c.browser || '').includes('Facebook')) {
+              appBadge = `<span class="px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 text-[10px] font-semibold"><i class="fa-brands fa-facebook me-1"></i>Facebook</span>`;
+            } else if ((c.browser || '').includes('Zalo')) {
+              appBadge = `<span class="px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 text-[10px] font-semibold">Zalo</span>`;
+            } else if ((c.browser || '').includes('TikTok')) {
+              appBadge = `<span class="px-1.5 py-0.5 rounded bg-pink-500/20 text-pink-300 text-[10px] font-semibold"><i class="fa-brands fa-tiktok me-1"></i>TikTok</span>`;
+            }
+
+            let devIcon = '<i class="fa-solid fa-laptop text-slate-400 me-1"></i>';
+            if ((c.device_type || '').includes('Điện thoại') || (c.device || '').includes('iPhone') || (c.device || '').includes('Samsung') || (c.os || '').includes('Android') || (c.os || '').includes('iOS')) {
+              devIcon = '<i class="fa-solid fa-mobile-screen text-emerald-400 me-1"></i>';
+            }
+
+            return `
+              <tr class="hover:bg-slate-800/30 transition">
+                <td class="py-2 px-3 font-mono text-slate-400 whitespace-nowrap">${escapeHtml(c.click_time || '')}</td>
+                <td class="py-2 px-3 font-mono text-slate-300 whitespace-nowrap">${escapeHtml(c.ip || '')}</td>
+                <td class="py-2 px-3 whitespace-nowrap font-medium text-white">${devIcon}${escapeHtml(c.device || 'Không xác định')}</td>
+                <td class="py-2 px-3 whitespace-nowrap text-slate-300">${escapeHtml(c.os || '')}</td>
+                <td class="py-2 px-3 whitespace-nowrap">${appBadge}</td>
+                <td class="py-2 px-3 whitespace-nowrap text-slate-400">${escapeHtml(c.referrer || 'Direct')}</td>
+              </tr>
+            `;
+          }).join('');
         }
       } catch (err) {
         alert(err.message);
       }
     }
+
     function closeAnalyticsModal() { document.getElementById('analyticsModal').classList.add('hidden'); }
 
     // Modal QR

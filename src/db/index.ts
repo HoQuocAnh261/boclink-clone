@@ -65,6 +65,7 @@ export function initDB() {
       browser TEXT,
       os TEXT,
       device TEXT,
+      device_type TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (link_id) REFERENCES links(id) ON DELETE CASCADE
     );
@@ -72,7 +73,13 @@ export function initDB() {
     CREATE INDEX IF NOT EXISTS idx_links_slug ON links(slug);
     CREATE INDEX IF NOT EXISTS idx_links_user ON links(user_id);
     CREATE INDEX IF NOT EXISTS idx_clicks_link ON clicks(link_id);
+    CREATE INDEX IF NOT EXISTS idx_clicks_link_ip ON clicks(link_id, ip, created_at);
   `);
+
+  // Thêm cột device_type vào clicks nếu chưa có
+  try {
+    db.exec(`ALTER TABLE clicks ADD COLUMN device_type TEXT NULL;`);
+  } catch (e) {}
 
   // Thêm các cột mới vào bảng links nếu trước đó chưa có
   try {
@@ -96,3 +103,4 @@ export function initDB() {
     db.prepare("UPDATE links SET domain = 'mozphim.online' WHERE domain = 'phim24h.online' OR domain IS NULL OR domain = ''").run();
   } catch (e) {}
 }
+

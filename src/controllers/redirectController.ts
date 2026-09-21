@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { db } from '../db/index.js';
-import { UAParser } from 'ua-parser-js';
 import { parseDeeplink } from '../utils/deeplink.js';
+import { isCrawlerBot, parseDeviceInfo } from '../utils/deviceParser.js';
 
 function escapeHtml(text: string): string {
   if (!text) return '';
@@ -103,49 +103,21 @@ export const redirectController = {
         }
       }
 
-      // Ghi nhận lượt click & phân tích thông tin
-      const parser = new UAParser(req.headers['user-agent']);
-      const uaResult = parser.getResult();
-      const ip = (req.headers['x-forwarded-for'] as string || req.socket.remoteAddress || '127.0.0.1').split(',')[0].trim();
-      const rawReferrer = req.get('referrer') || req.get('referer') || 'Direct';
-      
-      let cleanReferrer = 'Direct';
-      try {
-        if (rawReferrer !== 'Direct') {
-          cleanReferrer = new URL(rawReferrer).hostname;
-        }
-      } catch {
-        cleanReferrer = rawReferrer;
-      }
-
-      const browser = uaResult.browser.name || 'Unknown';
-      const os = uaResult.os.name || 'Unknown';
-      const deviceType = uaResult.device.type || 'Desktop';
-
-      // Cập nhật database
-      try {
-        db.prepare(`
-          INSERT INTO clicks (link_id, ip, referrer, browser, os, device)
-          VALUES (?, ?, ?, ?, ?, ?)
-        `).run(link.id, ip, cleanReferrer, browser, os, deviceType);
-
-        db.prepare('UPDATE links SET clicks = clicks + 1 WHERE id = ?').run(link.id);
-      } catch (err) {
-        console.error('Error logging click:', err);
-      }
-
-      const destination = link.original_url;
       const userAgentRaw = req.headers['user-agent'] || '';
-      const isBot = /facebookexternalhit|facebot|facebookcatalog|twitterbot|whatsapp|telegrambot|linkedinbot|pinterest|slackbot|vkshare|zalo/i.test(userAgentRaw);
+      const destination = link.original_url;
+      const isBot = isCrawlerBot(userAgentRaw);
 
-      // Nếu là Bot quét link của Facebook, Zalo, Telegram, Twitter -> Trả về thẻ OpenGraph HTML để hiển thị Preview tùy chỉnh
+      // 1. NẾU LÀ BOT QUÉT LINK (Facebook Crawler, Zalo Bot, Googlebot...):
+      // TUYỆT ĐỐI KHÔNG TÍNH CLICK!
       if (isBot) {
-        const ogTitle = link.og_title || link.title || 'Ưu đãi hấp dẫn';
-        const ogDesc = link.og_description || 'Bấm để xem chi tiết sản phẩm và ưu đãi trên ứng dụng.';
-        const ogImg = link.og_image || '';
-        const shortUrl = link.domain ? `https://${link.domain}/${link.slug}` : `https://${req.get('host')}/${link.slug}`;
+        // Nếu có tùy chỉnh preview -> Trả về thẻ OpenGraph HTML để Facebook/Zalo hiển thị đúng poster & tiêu đề
+        if (link.og_title || link.og_image) {
+          const ogTitle = link.og_title || link.title || 'Ưu đãi hấp dẫn';
+          const ogDesc = link.og_description || 'Bấm để xem chi tiết sản phẩm và ưu đãi trên ứng dụng.';
+          const ogImg = link.og_image || '';
+          const shortUrl = link.domain ? `https://${link.domain}/${link.slug}` : `https://${req.get('host')}/${link.slug}`;
 
-        return res.send(`<!DOCTYPE html>
+          return res.send(`<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
@@ -177,6 +149,63 @@ export const redirectController = {
   </script>
 </body>
 </html>`);
+        }
+
+        // Nếu không tùy chỉnh preview -> Trả mã 302 trực tiếp để Facebook nhận diện là link TikTok/Shopee gốc
+        res.writeHead(302, {
+          'Location': destination,
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'X-Content-Type-Options': 'nosniff',
+          'Content-Length': '0'
+        });
+        return res.end();
+      }
+
+      // 2. NGƯỜI DÙNG THẬT TRUY CẬP:
+      // Phân tích IP chuẩn (hỗ trợ qua Cloudflare proxy / Render)
+      const rawIp = (
+        (req.headers['cf-connecting-ip'] as string) ||
+        (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
+        req.socket.remoteAddress ||
+        '127.0.0.1'
+      );
+      const clientIp = rawIp.replace(/^.*:/, '') === '1' ? '127.0.0.1' : rawIp.replace(/^::ffff:/, '');
+
+      const rawReferrer = req.get('referrer') || req.get('referer') || 'Direct';
+      let cleanReferrer = 'Direct';
+      try {
+        if (rawReferrer !== 'Direct') {
+          cleanReferrer = new URL(rawReferrer).hostname;
+        }
+      } catch {
+        cleanReferrer = rawReferrer;
+      }
+
+      // Phân tích thông tin Thiết bị, Hệ điều hành, App/Trình duyệt
+      const devInfo = parseDeviceInfo(userAgentRaw);
+
+      // Mỗi ngày chỉ tính 1 click cho cùng 1 địa chỉ IP truy cập (theo ngày giờ Việt Nam GMT+7)
+      try {
+        const todayClick = db.prepare(`
+          SELECT id FROM clicks
+          WHERE link_id = ? 
+            AND ip = ? 
+            AND DATE(created_at, '+7 hours') = DATE('now', '+7 hours')
+          LIMIT 1
+        `).get(link.id, clientIp);
+
+        if (!todayClick) {
+          // IP này chưa click hôm nay -> Ghi nhận 1 lượt click người dùng thật
+          db.prepare(`
+            INSERT INTO clicks (link_id, ip, referrer, browser, os, device, device_type)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+          `).run(link.id, clientIp, cleanReferrer, devInfo.browser, devInfo.os, devInfo.device, devInfo.deviceType);
+
+          db.prepare('UPDATE links SET clicks = clicks + 1 WHERE id = ?').run(link.id);
+        }
+      } catch (err) {
+        console.error('Error logging real click:', err);
       }
 
       // 1. Chuyển hướng trực tiếp chuẩn như phim24h.online (Clean 302 Found, Content-Length: 0, no-cache)
