@@ -533,8 +533,8 @@
           if (mDomainSelect) {
             const currentSelected = mDomainSelect.value;
             let optionsHtml = '<option value="">Mặc định (Domain hệ thống)</option>';
-            allDomains.forEach(d => {
-              const isSel = (currentSelected === d.domain) || (!currentSelected && d.domain === 'phim24h.online');
+            allDomains.forEach((d, idx) => {
+              const isSel = (currentSelected === d.domain) || (!currentSelected && (d.domain === 'mozphim.online' || idx === 0));
               optionsHtml += `<option value="${escapeHtml(d.domain)}" ${isSel ? 'selected' : ''}>${escapeHtml(d.domain)}${d.is_default ? ' (Khuyên dùng)' : ''}</option>`;
             });
             mDomainSelect.innerHTML = optionsHtml;

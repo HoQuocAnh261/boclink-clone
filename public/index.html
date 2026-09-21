@@ -267,8 +267,8 @@
           const selectEl = document.getElementById('linkDomain');
           if (selectEl && domains.length > 0) {
             let html = '<option value="">Mặc định (Domain hệ thống)</option>';
-            domains.forEach(d => {
-              const isSel = d.domain === 'phim24h.online';
+            domains.forEach((d, idx) => {
+              const isSel = d.domain === 'mozphim.online' || idx === 0;
               html += `<option value="${d.domain}" ${isSel ? 'selected' : ''}>${d.domain}${d.is_default ? ' (Khuyên dùng)' : ''}</option>`;
             });
             selectEl.innerHTML = html;
