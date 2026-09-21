@@ -15,9 +15,13 @@ function generateRandomSlug(length = 6): string {
 }
 
 export const linkController = {
-  // Rút gọn link (khách hoặc user đã đăng nhập)
+  // Rút gọn link (chỉ cho phép user đã đăng nhập)
   shorten: async (req: AuthRequest, res: Response) => {
     try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Hệ thống cá nhân: Vui lòng đăng nhập để tạo liên kết' });
+      }
+
       let { url, custom_slug, type, title, password, domain } = req.body;
 
       if (!url) {

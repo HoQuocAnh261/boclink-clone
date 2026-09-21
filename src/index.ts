@@ -9,7 +9,7 @@ import { authController } from './controllers/authController.js';
 import { linkController } from './controllers/linkController.js';
 import { redirectController } from './controllers/redirectController.js';
 import { domainController } from './controllers/domainController.js';
-import { optionalAuth, requireAuth, hashPassword } from './utils/auth.js';
+import { optionalAuth, requireAuth, hashPassword, AuthRequest } from './utils/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -40,20 +40,24 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static assets
-app.use(express.static(publicDir));
+// Serve static assets (không tự động serve index.html để kiểm soát đăng nhập)
+app.use(express.static(publicDir, { index: false }));
 
-// Frontend Page Routes
-app.get('/', (req, res) => {
-  res.sendFile(path.join(publicDir, 'index.html'));
+// Frontend Page Routes - Cá nhân: Không đăng nhập thì chuyển về /user/login
+app.get('/', optionalAuth, (req: AuthRequest, res) => {
+  if (req.user) {
+    return res.redirect('/dashboard');
+  }
+  return res.redirect('/user/login');
 });
 
 app.get(['/user', '/user/login'], (req, res) => {
   res.sendFile(path.join(publicDir, 'login.html'));
 });
 
+// Khóa trang đăng ký, chuyển hướng về đăng nhập
 app.get('/user/register', (req, res) => {
-  res.sendFile(path.join(publicDir, 'register.html'));
+  res.redirect('/user/login');
 });
 
 app.get('/dashboard', requireAuth, (req, res) => {
@@ -66,8 +70,8 @@ app.post('/api/auth/login', authController.login);
 app.post('/api/auth/logout', authController.logout);
 app.get('/api/auth/me', optionalAuth, authController.getMe);
 
-// API Link & Analytics Routes
-app.post('/api/links/shorten', optionalAuth, linkController.shorten);
+// API Link & Analytics Routes (Chỉ cho phép khi đã đăng nhập)
+app.post('/api/links/shorten', requireAuth, linkController.shorten);
 app.get('/api/links', requireAuth, linkController.getMyLinks);
 app.get('/api/links/dashboard/overview', requireAuth, linkController.getDashboardOverview);
 app.get('/api/links/:id/analytics', requireAuth, linkController.getLinkAnalytics);
