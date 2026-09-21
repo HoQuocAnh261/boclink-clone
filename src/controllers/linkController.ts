@@ -66,7 +66,10 @@ export const linkController = {
       const linkType = ['direct', 'cloak', 'deeplink'].includes(type) ? type : 'direct';
       const userId = req.user ? req.user.id : null;
       const linkTitle = title ? title.trim() : (new URL(url)).hostname;
-      const selectedDomain = domain ? domain.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '') : null;
+      let selectedDomain = domain ? domain.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '') : 'mozphim.online';
+      if (!selectedDomain || selectedDomain === 'phim24h.online') {
+        selectedDomain = 'mozphim.online';
+      }
 
       const stmt = db.prepare(`
         INSERT INTO links (user_id, title, original_url, slug, type, password, domain, og_title, og_description, og_image)
@@ -75,8 +78,7 @@ export const linkController = {
       const result = stmt.run(userId, linkTitle, url, slug, linkType, password || null, selectedDomain, og_title || null, og_description || null, og_image || null);
       const linkId = Number(result.lastInsertRowid);
 
-      const baseUrl = config.getBaseUrl(req);
-      const shortUrl = selectedDomain ? `https://${selectedDomain}/${slug}` : `${baseUrl}/${slug}`;
+      const shortUrl = `https://${selectedDomain}/${slug}`;
       const qrCodeDataUrl = await QRCode.toDataURL(shortUrl, { width: 250, margin: 2 });
 
       return res.status(201).json({
@@ -117,11 +119,14 @@ export const linkController = {
         ORDER BY l.created_at DESC
       `).all(req.user.id);
 
-      const baseUrl = config.getBaseUrl(req);
-      const mapped = (links as any[]).map(link => ({
-        ...link,
-        short_url: link.domain ? `https://${link.domain}/${link.slug}` : `${baseUrl}/${link.slug}`
-      }));
+      const mapped = (links as any[]).map(link => {
+        const d = (link.domain && link.domain !== 'phim24h.online') ? link.domain : 'mozphim.online';
+        return {
+          ...link,
+          domain: d,
+          short_url: `https://${d}/${link.slug}`
+        };
+      });
 
       return res.json({ links: mapped });
     } catch (error: any) {

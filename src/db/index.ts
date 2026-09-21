@@ -88,23 +88,11 @@ export function initDB() {
     db.exec(`ALTER TABLE links ADD COLUMN og_image TEXT NULL;`);
   } catch (e) {}
 
-  // Khởi tạo danh sách các domain mẫu ban đầu nếu bảng domains đang trống
+  // Đảm bảo mozphim.online luôn là domain chính duy nhất và di chuyển link cũ sang mozphim.online
   try {
-    const row: any = db.prepare('SELECT count(*) as count FROM domains').get();
-    if (row && row.count === 0) {
-      const defaultDomains = [
-        'phim24h.online',
-        'reviewdeal.online',
-        'dealhot.link',
-        'linkvip.me',
-        'boclink.vn'
-      ];
-      for (const d of defaultDomains) {
-        db.prepare(`
-          INSERT OR IGNORE INTO domains (domain, is_default, status)
-          VALUES (?, 1, 'active')
-        `).run(d);
-      }
-    }
+    db.prepare("INSERT OR IGNORE INTO domains (domain, is_default, status) VALUES ('mozphim.online', 1, 'active')").run();
+    db.prepare("UPDATE domains SET is_default = 1 WHERE domain = 'mozphim.online'").run();
+    db.prepare("DELETE FROM domains WHERE domain = 'phim24h.online'").run();
+    db.prepare("UPDATE links SET domain = 'mozphim.online' WHERE domain = 'phim24h.online' OR domain IS NULL OR domain = ''").run();
   } catch (e) {}
 }
