@@ -126,162 +126,17 @@ export const redirectController = {
 
       const destination = link.original_url;
 
-      // 1. Chuyển hướng trực tiếp (Direct 302)
-      if (link.type === 'direct') {
-        return res.redirect(302, destination);
-      }
-
-      // 2. Chế độ Smart Deeplink (mở thẳng App Shopee, TikTok, Lazada)
-      if (link.type === 'deeplink') {
-        const deeplink = parseDeeplink(destination);
-        return res.send(`
-          <!DOCTYPE html>
-          <html lang="vi">
-          <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-            <title>Đang mở ứng dụng ${deeplink.platform}...</title>
-            <script src="https://cdn.tailwindcss.com"></script>
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-          </head>
-          <body class="bg-[#0b101b] text-slate-100 flex flex-col items-center justify-center min-h-screen p-4 font-sans select-none">
-            <div class="max-w-sm w-full bg-[#131b2e] border border-slate-700/70 rounded-3xl p-6 text-center shadow-2xl relative overflow-hidden">
-              
-              <!-- Glow background -->
-              <div class="absolute -top-12 -right-12 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl"></div>
-
-              <!-- Animated Icon -->
-              <div class="relative w-20 h-20 mx-auto mb-5 flex items-center justify-center">
-                <div class="absolute inset-0 rounded-full border-4 border-emerald-500/20 border-t-emerald-500 animate-spin"></div>
-                <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-[#06557c] to-[#32af5e] flex items-center justify-center text-white text-2xl shadow-lg">
-                  ${deeplink.platform === 'TikTok' ? '<i class="fa-brands fa-tiktok"></i>' : (deeplink.platform === 'Shopee' ? '<i class="fa-solid fa-bag-shopping"></i>' : '<i class="fa-solid fa-rocket"></i>')}
-                </div>
-              </div>
-
-              <h2 class="text-xl font-extrabold text-white mb-1.5">Đang mở App ${deeplink.platform}...</h2>
-              <p class="text-slate-400 text-xs mb-6 leading-relaxed">
-                Đang tự động chuyển bạn vào ứng dụng <span class="text-emerald-400 font-semibold">${deeplink.platform}</span> trên điện thoại.
-              </p>
-
-              <!-- Main CTA button - Khi bấm trực tiếp luôn luôn mở app 100% không bị chặn -->
-              <div class="space-y-3">
-                <a id="btnOpenApp" href="#" onclick="triggerOpenApp(event)"
-                   class="flex items-center justify-center gap-2 w-full py-4 px-5 bg-gradient-to-r from-[#06557c] to-[#32af5e] hover:opacity-95 text-white font-bold text-sm rounded-2xl shadow-xl shadow-emerald-950/40 active:scale-95 transition animate-pulse">
-                  <span>MỞ TRONG APP ${deeplink.platform.toUpperCase()}</span>
-                  <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-                </a>
-
-                <a href="${destination}" id="btnWebFallback"
-                   class="block w-full py-3 px-4 bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white text-xs font-semibold rounded-2xl border border-slate-700/80 transition">
-                  Tiếp tục xem trên Web
-                </a>
-              </div>
-
-              <!-- Hướng dẫn khi mở trong trình duyệt nhúng Facebook / Zalo -->
-              <div id="inAppTip" class="hidden mt-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-2xl text-[11px] text-blue-300 text-left flex items-start gap-2">
-                <i class="fa-solid fa-circle-info text-blue-400 mt-0.5"></i>
-                <span>Bạn đang mở trong Facebook. Hãy bấm nút <b>"MỞ TRONG APP"</b> ở trên, hoặc bấm dấu <b>•••</b> góc trên bên phải chọn <b>"Mở trong trình duyệt hệ thống"</b>.</span>
-              </div>
-
-              <div class="mt-6 pt-4 border-t border-slate-800/80 text-[11px] text-slate-500 flex items-center justify-center gap-1">
-                <i class="fa-solid fa-shield-halved text-emerald-400"></i>
-                Bảo vệ bởi <span class="text-slate-400 font-semibold">BoclinkVN Deeplink</span>
-              </div>
-            </div>
-
-            <!-- Hidden trigger anchor -->
-            <a id="hiddenTrigger" style="display:none;"></a>
-
-            <script>
-              const iosScheme = ${JSON.stringify(deeplink.iosScheme || null)};
-              const iosAltScheme = ${JSON.stringify(deeplink.iosAltScheme || null)};
-              const androidIntent = ${JSON.stringify(deeplink.androidIntent || null)};
-              const androidScheme = ${JSON.stringify(deeplink.androidScheme || null)};
-              const webUrl = ${JSON.stringify(destination)};
-              const isShop = ${JSON.stringify(!!deeplink.isShopProduct)};
-
-              const ua = navigator.userAgent || navigator.vendor || window.opera;
-              const isAndroid = /android/i.test(ua);
-              const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
-              const isInApp = /FBAN|FBAV|FB_IAB|Instagram|Zalo/i.test(ua);
-
-              if (isInApp) {
-                const tip = document.getElementById('inAppTip');
-                if (tip) tip.classList.remove('hidden');
-              }
-
-              let targetScheme = webUrl;
-              if (isAndroid) {
-                targetScheme = androidIntent || androidScheme || webUrl;
-              } else if (isIOS) {
-                targetScheme = iosScheme || iosAltScheme || webUrl;
-              }
-
-              // Gán href vào nút chính
-              document.getElementById('btnOpenApp').href = targetScheme;
-
-              let fallbackTimer = null;
-              function clearFallback() {
-                if (fallbackTimer) {
-                  clearTimeout(fallbackTimer);
-                  fallbackTimer = null;
-                }
-              }
-
-              window.addEventListener('blur', clearFallback);
-              window.addEventListener('pagehide', clearFallback);
-              document.addEventListener('visibilitychange', function() {
-                if (document.hidden) clearFallback();
-              });
-
-              function triggerOpenApp(e) {
-                if (e) e.preventDefault();
-                clearFallback();
-
-                if (isAndroid) {
-                  // Trên Android: kích hoạt Intent trực tiếp
-                  window.location.href = targetScheme;
-                  setTimeout(function() {
-                    if (!document.hidden && androidScheme && androidScheme !== targetScheme) {
-                      window.location.href = androidScheme;
-                    }
-                  }, 800);
-                } else if (isIOS) {
-                  // Trên iOS: kích hoạt schema chính
-                  window.location.href = targetScheme;
-                  setTimeout(function() {
-                    if (iosAltScheme && !document.hidden) {
-                      window.location.href = iosAltScheme;
-                    }
-                  }, 800);
-                } else {
-                  // Desktop: mở thẳng web
-                  window.location.href = webUrl;
-                }
-              }
-
-              // Tự động kích hoạt khi vừa tải trang trên Mobile
-              if (isAndroid || isIOS) {
-                try {
-                  triggerOpenApp();
-                } catch(e) {}
-
-                // Fallback sau 4 giây nếu app chưa được kích hoạt
-                fallbackTimer = setTimeout(function() {
-                  if (!document.hidden) {
-                    console.log('App did not open, staying on fallback');
-                  }
-                }, 4000);
-              } else {
-                // Desktop: chuyển thẳng vào link web sau 1.2 giây
-                setTimeout(function() {
-                  window.location.href = webUrl;
-                }, 1200);
-              }
-            </script>
-          </body>
-          </html>
-        `);
+      // 1. Chuyển hướng trực tiếp chuẩn như phim24h.online (Clean 302 Found, Content-Length: 0, no-cache)
+      // Cho phép Facebook In-App Browser nhận lệnh chuyển hướng ngay lập tức và bung thẳng vào App TikTok/Shopee
+      if (link.type === 'direct' || link.type === 'deeplink') {
+        res.writeHead(302, {
+          'Location': destination,
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'X-Content-Type-Options': 'nosniff',
+          'Content-Length': '0'
+        });
+        return res.end();
       }
 
       // 3. Chế độ Cloak / Bọc link (Ẩn nguồn, chống chặn link mạng xã hội)
