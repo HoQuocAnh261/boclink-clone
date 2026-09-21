@@ -83,6 +83,13 @@ app.get('/api/domains', optionalAuth, domainController.getDomains);
 app.post('/api/domains', requireAuth, domainController.addDomain);
 app.delete('/api/domains/:id', requireAuth, domainController.deleteDomain);
 
+// API Backup Database (Tải file database về máy)
+app.get('/api/system/backup-db', requireAuth, (req, res) => {
+  const dbFile = path.resolve(__dirname, '../data/boclink.sqlite');
+  res.download(dbFile, 'boclink-backup.sqlite');
+});
+
+
 // Dynamic Redirect Route (:slug) - Cần đặt ở cuối cùng
 app.get('/:slug', redirectController.handleRedirect);
 app.post('/:slug', redirectController.handleRedirect);
