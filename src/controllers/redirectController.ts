@@ -170,7 +170,12 @@ export const redirectController = {
         req.socket.remoteAddress ||
         '127.0.0.1'
       );
-      const clientIp = rawIp.replace(/^.*:/, '') === '1' ? '127.0.0.1' : rawIp.replace(/^::ffff:/, '');
+      let clientIp = rawIp.trim();
+      if (clientIp === '::1' || clientIp === '127.0.0.1') {
+        clientIp = '127.0.0.1';
+      } else if (clientIp.startsWith('::ffff:')) {
+        clientIp = clientIp.replace('::ffff:', '');
+      }
 
       const rawReferrer = req.get('referrer') || req.get('referer') || 'Direct';
       let cleanReferrer = 'Direct';
@@ -182,10 +187,12 @@ export const redirectController = {
         cleanReferrer = rawReferrer;
       }
 
-      // Lấy thông tin vị trí địa lý & Cloudflare headers
+      // Lấy thông tin vị trí địa lý, Cloudflare headers & ngôn ngữ thiết bị (hỗ trợ iPhone iCloud Relay / 4G)
       const cfCountry = req.headers['cf-ipcountry'] as string | undefined;
       const cfCity = req.headers['cf-ipcity'] as string | undefined;
-      const geoInfo = getGeoLocation(clientIp, cfCountry, cfCity);
+      const acceptLang = req.headers['accept-language'] as string | undefined;
+      const geoInfo = getGeoLocation(clientIp, cfCountry, cfCity, acceptLang);
+
 
       // YÊU CẦU: LOẠI TRỪ CÁC CLICK TỪ QUỐC GIA KHÁC VIỆT NAM
       // Nếu KHÔNG phải từ Việt Nam -> Tuyệt đối không tính click (nhưng vẫn redirect cho người dùng)

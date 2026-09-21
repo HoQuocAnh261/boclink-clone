@@ -13,8 +13,24 @@ export interface DeviceInfo {
 export function isCrawlerBot(ua: string | undefined): boolean {
   if (!ua || ua.length < 15) return true;
 
-  return /bot|crawler|spider|crawling|facebookexternalhit|facebot|facebookcatalog|meta-externalagent|twitterbot|whatsapp|telegrambot|linkedinbot|pinterest|slackbot|vkshare|zalo|discordbot|googlebot|bingbot|yandex|duckduckbot|applebot|bytespider|tiktokbot|curl|wget|python|postman|render|uptimerobot|headlesschrome|phantomjs/i.test(ua);
+  // 1. Nếu là người dùng thật trong các ứng dụng di động phổ biến -> KHÔNG PHẢI BOT!
+  if (/ZaloAppVersion|ZaloTheme|ZaloLanguage/i.test(ua)) {
+    return false; // Zalo App trên điện thoại
+  }
+  if (/FBAN|FBIOS|FB4A|FB_IAB/i.test(ua)) {
+    return false; // Facebook App trên điện thoại
+  }
+  if (/musical_ly|trill|ByteLocale/i.test(ua) || (/TikTok/i.test(ua) && !/tiktokbot|bytespider/i.test(ua))) {
+    return false; // TikTok App trên điện thoại
+  }
+  if (/Instagram/i.test(ua)) {
+    return false; // Instagram App trên điện thoại
+  }
+
+  // 2. Lọc các bot cào link preview & crawler tự động
+  return /facebookexternalhit|facebot|facebookcatalog|meta-externalagent|twitterbot|whatsapp|telegrambot|linkedinbot|pinterest|slackbot|vkshare|zalo-link-preview|zalobot|discordbot|googlebot|bingbot|yandex|duckduckbot|applebot|bytespider|tiktokbot|curl|wget|python|postman|render|uptimerobot|headlesschrome|phantomjs|crawler|spider/i.test(ua);
 }
+
 
 /**
  * Nhận diện chi tiết Thiết bị (iPhone, Samsung...), Hệ điều hành, Trình duyệt / App (Facebook, Zalo...)
@@ -140,8 +156,9 @@ const VN_CITY_MAP: Record<string, string> = {
 
 /**
  * Xác định vị trí địa lý của IP và kiểm tra xem có phải từ Việt Nam không
+ * Hỗ trợ nhận diện người dùng iPhone dùng iCloud Private Relay, 1.1.1.1 WARP VPN hoặc 4G
  */
-export function getGeoLocation(ip: string, cfCountry?: string, cfCity?: string): GeoInfo {
+export function getGeoLocation(ip: string, cfCountry?: string, cfCity?: string, acceptLanguage?: string): GeoInfo {
   // Cho phép Localhost trong môi trường test/local
   if (ip === '127.0.0.1' || ip === '::1' || ip.startsWith('192.168.') || ip.startsWith('10.')) {
     return {
@@ -168,12 +185,21 @@ export function getGeoLocation(ip: string, cfCountry?: string, cfCity?: string):
     cityName = geo.city;
   }
 
-  const isVietnam = countryCode === 'VN';
+  // Kiểm tra ngôn ngữ thiết bị (iPhone/Android người dùng tại VN)
+  const isVietnameseDevice = /vi-VN|vi/i.test(acceptLanguage || '');
+
+  // Xác định có phải Việt Nam không:
+  // 1. Nếu countryCode là VN
+  // 2. Hoặc thiết bị dùng tiếng Việt (kể cả qua iCloud Private Relay, 1.1.1.1 WARP VPN hoặc mạng 4G mới)
+  // 3. Nếu chưa rõ quốc gia nhưng là thiết bị di động bình thường
+  const isVietnam = countryCode === 'VN' || isVietnameseDevice || !countryCode;
 
   // Chuyển tên thành phố sang tiếng Việt chuẩn đẹp
   let cleanCity = cityName;
   if (cityName && VN_CITY_MAP[cityName.toLowerCase()]) {
     cleanCity = VN_CITY_MAP[cityName.toLowerCase()];
+  } else if (!cleanCity && isVietnam) {
+    cleanCity = isVietnameseDevice && countryCode !== 'VN' && countryCode ? 'Việt Nam (iCloud/VPN)' : 'Việt Nam';
   }
 
   let location = 'Không xác định';
@@ -185,9 +211,10 @@ export function getGeoLocation(ip: string, cfCountry?: string, cfCity?: string):
 
   return {
     isVietnam,
-    country: countryCode || 'Khác',
-    city: cleanCity || 'Việt Nam',
+    country: isVietnam ? 'VN' : (countryCode || 'Khác'),
+    city: cleanCity || (isVietnam ? 'Việt Nam' : 'Quốc tế'),
     location
   };
 }
+
 
