@@ -1,5 +1,6 @@
 /**
  * Helper chuyển đổi URL web sang deep link schema cho app di động (Shopee, TikTok, Lazada, YouTube)
+ * ĐẢM BẢO GIỮ NGUYÊN 100% THAM SỐ TRACKING HOA HỒNG (_t=..., aff_id, track_params...)
  */
 
 export interface DeeplinkInfo {
@@ -21,10 +22,13 @@ export function parseDeeplink(urlStr: string): DeeplinkInfo {
     const encodedUrl = encodeURIComponent(urlStr);
     const urlWithoutProtocol = urlStr.replace(/^https?:\/\//, '');
 
+    // Lấy toàn bộ tham số tracking hoa hồng (ví dụ: _t=ZS-99uEKv0poKj...)
+    const rawSearch = url.search ? url.search.replace(/^\?/, '') : '';
+    const trackingSuffix = rawSearch ? `&${rawSearch}` : '';
+
     // 1. TikTok / TikTok Shop / vt.tiktok.com
     if (host.includes('tiktok.com') || host.includes('vt.tiktok.com')) {
       // A. KIỂM TRA SẢN PHẨM TIKTOK SHOP (PDP)
-      // Các dạng: /vn/pdp/1729601281544456787, /view/product/1729..., ?product_id=1729...
       const pdpMatch = url.pathname.match(/\/pdp\/(\d+)/) || 
                        url.pathname.match(/\/product\/(\d+)/) ||
                        url.pathname.match(/\/view\/product\/(\d+)/);
@@ -32,13 +36,13 @@ export function parseDeeplink(urlStr: string): DeeplinkInfo {
       const productId = (pdpMatch && pdpMatch[1]) || queryProductId;
 
       if (productId) {
-        // Schema chính xác nhất để mở thẳng vào trang chi tiết sản phẩm TikTok Shop
-        const iosScheme = `snssdk1233://ec/pdp?product_id=${productId}`;
-        const iosAltScheme = `tiktok://ec/pdp?product_id=${productId}`;
+        // ĐÍNH KÈM NGUYÊN VẸN THAM SỐ _t ĐỂ TIKTOK GHI NHẬN HOA HỒNG CHO AFFILIATE
+        const iosScheme = `snssdk1233://ec/pdp?product_id=${productId}${trackingSuffix}`;
+        const iosAltScheme = `tiktok://ec/pdp?product_id=${productId}${trackingSuffix}`;
         
-        // Android Intent nhắm thẳng vào ecommerce product detail page của TikTok
-        const androidIntent = `intent://ec/pdp?product_id=${productId}#Intent;package=com.zhiliaoapp.musically;scheme=snssdk1233;end;`;
-        const androidScheme = `snssdk1233://ec/pdp?product_id=${productId}`;
+        // Android Intent với đầy đủ token hoa hồng
+        const androidIntent = `intent://ec/pdp?product_id=${productId}${trackingSuffix}#Intent;package=com.zhiliaoapp.musically;scheme=snssdk1233;end;`;
+        const androidScheme = `snssdk1233://ec/pdp?product_id=${productId}${trackingSuffix}`;
 
         return {
           isDeeplinkable: true,
@@ -60,10 +64,10 @@ export function parseDeeplink(urlStr: string): DeeplinkInfo {
         return {
           isDeeplinkable: true,
           platform: 'TikTok',
-          iosScheme: `snssdk1233://aweme/detail/${videoId}`,
-          iosAltScheme: `tiktok://aweme/detail/${videoId}`,
-          androidIntent: `intent://aweme/detail/${videoId}#Intent;package=com.zhiliaoapp.musically;scheme=snssdk1233;end;`,
-          androidScheme: `snssdk1233://aweme/detail/${videoId}`,
+          iosScheme: `snssdk1233://aweme/detail/${videoId}${url.search ? '?' + rawSearch : ''}`,
+          iosAltScheme: `tiktok://aweme/detail/${videoId}${url.search ? '?' + rawSearch : ''}`,
+          androidIntent: `intent://aweme/detail/${videoId}${url.search ? '?' + rawSearch : ''}#Intent;package=com.zhiliaoapp.musically;scheme=snssdk1233;end;`,
+          androidScheme: `snssdk1233://aweme/detail/${videoId}${url.search ? '?' + rawSearch : ''}`,
           originalUrl: urlStr
         };
       }
@@ -95,7 +99,7 @@ export function parseDeeplink(urlStr: string): DeeplinkInfo {
       };
     }
 
-    // 2. Shopee (Việt Nam & Quốc tế)
+    // 2. Shopee (Việt Nam & Quốc tế) - Giữ nguyên 100% affiliate params
     if (host.includes('shopee.vn') || host.includes('shp.ee') || host.includes('s.shopee.vn')) {
       return {
         isDeeplinkable: true,
