@@ -363,10 +363,19 @@ export const linkController = {
         WHERE l.user_id = ? AND DATE(c.created_at, '+7 hours') = DATE('now', '+7 hours')
       `).get(req.user.id);
 
+      // Số click onsite trong 3 phút gần nhất
+      const onsite3m: any = db.prepare(`
+        SELECT COUNT(*) as count 
+        FROM clicks c 
+        JOIN links l ON c.link_id = l.id 
+        WHERE l.user_id = ? AND c.created_at >= DATETIME('now', '-3 minutes')
+      `).get(req.user.id);
+
       return res.json({
         totalLinks: totalLinks.count,
         totalClicks: totalClicks.count,
-        todayClicks: todayClicks.count
+        todayClicks: todayClicks.count,
+        onsiteClicks: onsite3m.count
       });
     } catch (error: any) {
       return res.status(500).json({ error: error.message || 'Lỗi tải tổng quan' });
@@ -396,7 +405,8 @@ export const linkController = {
           COALESCE(c.city, 'Đà Nẵng') as city,
           COALESCE(c.country, 'VN') as country,
           c.created_at,
-          STRFTIME('%H:%M:%S %d/%m/%Y', c.created_at, '+7 hours') as click_time
+          STRFTIME('%H:%M:%S %d/%m/%Y', c.created_at, '+7 hours') as click_time,
+          CASE WHEN c.created_at >= DATETIME('now', '-3 minutes') THEN 1 ELSE 0 END as is_onsite_3m
         FROM clicks c
         JOIN links l ON c.link_id = l.id
         WHERE l.user_id = ?
@@ -404,7 +414,17 @@ export const linkController = {
         LIMIT 50
       `).all(req.user.id);
 
-      return res.json({ recentClicks });
+      const onsite3m: any = db.prepare(`
+        SELECT COUNT(*) as count 
+        FROM clicks c 
+        JOIN links l ON c.link_id = l.id 
+        WHERE l.user_id = ? AND c.created_at >= DATETIME('now', '-3 minutes')
+      `).get(req.user.id);
+
+      return res.json({ 
+        recentClicks,
+        onsiteClicks: onsite3m.count
+      });
     } catch (error: any) {
       return res.status(500).json({ error: error.message || 'Lỗi tải lịch sử click' });
     }

@@ -65,34 +65,51 @@
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
     
     <!-- Top Stats Overview -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-      <div class="card-glass p-6 rounded-2xl flex items-center justify-between">
+    <!-- Top Stats Overview -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+      <div class="card-glass p-5 rounded-2xl flex items-center justify-between">
         <div>
           <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Tổng liên kết</p>
           <h3 class="text-3xl font-black text-white" id="statTotalLinks">0</h3>
         </div>
-        <div class="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center text-xl">
+        <div class="w-11 h-11 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center text-lg">
           <i class="fa-solid fa-link"></i>
         </div>
       </div>
 
-      <div class="card-glass p-6 rounded-2xl flex items-center justify-between">
+      <div class="card-glass p-5 rounded-2xl flex items-center justify-between">
         <div>
           <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Tổng lượt Click</p>
           <h3 class="text-3xl font-black text-white" id="statTotalClicks">0</h3>
         </div>
-        <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl">
+        <div class="w-11 h-11 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-lg">
           <i class="fa-solid fa-arrow-pointer"></i>
         </div>
       </div>
 
-      <div class="card-glass p-6 rounded-2xl flex items-center justify-between">
+      <div class="card-glass p-5 rounded-2xl flex items-center justify-between">
         <div>
-          <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Lượt Click hôm nay</p>
+          <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Hôm nay (Giờ VN)</p>
           <h3 class="text-3xl font-black text-emerald-400" id="statTodayClicks">0</h3>
         </div>
-        <div class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-xl">
+        <div class="w-11 h-11 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-lg">
           <i class="fa-solid fa-chart-line"></i>
+        </div>
+      </div>
+
+      <div class="card-glass p-5 rounded-2xl flex items-center justify-between border-emerald-500/30 bg-emerald-950/20 relative overflow-hidden shadow-emerald-950/20 shadow-lg">
+        <div>
+          <div class="flex items-center gap-1.5 mb-1">
+            <span class="relative flex h-2.5 w-2.5">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            </span>
+            <p class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Onsite (3 phút qua)</p>
+          </div>
+          <h3 class="text-3xl font-black text-emerald-300" id="statOnsiteClicks">0</h3>
+        </div>
+        <div class="w-11 h-11 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-users-viewfinder"></i>
         </div>
       </div>
     </div>
@@ -145,13 +162,18 @@
     <div class="card-glass rounded-2xl overflow-hidden shadow-xl mt-8">
       <div class="p-5 border-b border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-900/40">
         <div>
-          <h3 class="text-base font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-bolt text-amber-400"></i> Lịch Sử Click Người Dùng Thật
-            <span class="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/30 flex items-center gap-1">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Thời gian gần nhất đứng đầu
+          <div class="flex items-center gap-2 flex-wrap">
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-bolt text-amber-400"></i> Lịch Sử Click Người Dùng Thật
+            </h3>
+            <span class="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/30 flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Realtime Trực Tiếp (Không cần F5)
             </span>
-          </h3>
-          <p class="text-xs text-slate-400 mt-1">Bảng tự động liệt kê trực tiếp các lượt click người dùng thật mà không cần mở biểu đồ</p>
+            <span class="text-[10px] px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-bold border border-blue-500/30 flex items-center gap-1" id="badgeOnsiteClicksTable">
+              <i class="fa-solid fa-users-viewfinder text-blue-400"></i> Onsite (3p): <span id="textOnsiteCount" class="text-white ms-0.5 font-black">0</span>
+            </span>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">Tự động cập nhật trực tiếp ngay khi có click mới (Thời gian gần nhất luôn đứng đầu)</p>
         </div>
         <div class="flex items-center gap-2">
           <button onclick="loadRecentClicksTable()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-xs flex items-center gap-1.5 border border-slate-700 transition">
@@ -164,7 +186,7 @@
         <table class="w-full text-left text-xs border-collapse">
           <thead class="bg-slate-950/90 sticky top-0 text-[11px] text-slate-400 border-b border-slate-800 uppercase font-semibold z-10 backdrop-blur-sm">
             <tr>
-              <th class="py-3 px-4 whitespace-nowrap">Thời gian (Giờ VN)</th>
+              <th class="py-3 px-4 whitespace-nowrap">Thời gian & Trạng thái</th>
               <th class="py-3 px-4 whitespace-nowrap">Liên kết (Link)</th>
               <th class="py-3 px-4 whitespace-nowrap">Tỉnh / Thành phố</th>
               <th class="py-3 px-4 whitespace-nowrap">Thiết bị</th>
@@ -574,6 +596,12 @@
           document.getElementById('statTotalLinks').textContent = stats.totalLinks;
           document.getElementById('statTotalClicks').textContent = stats.totalClicks;
           document.getElementById('statTodayClicks').textContent = stats.todayClicks;
+          if (document.getElementById('statOnsiteClicks')) {
+            document.getElementById('statOnsiteClicks').textContent = stats.onsiteClicks || 0;
+          }
+          if (document.getElementById('textOnsiteCount')) {
+            document.getElementById('textOnsiteCount').textContent = stats.onsiteClicks || 0;
+          }
         }
 
         // Lấy danh sách link
@@ -589,9 +617,79 @@
 
         // Tải bảng lịch sử click trực tiếp (sắp xếp gần nhất lên đầu)
         await loadRecentClicksTable();
+
+        // Bắt đầu luồng kết nối Realtime (Server-Sent Events)
+        initRealtimeStream();
       } catch (err) {
         console.error('Error loading dashboard:', err);
       }
+    }
+
+    // Hàm tạo mã HTML cho từng hàng click
+    function buildClickRowHtml(c, isNew = false) {
+      let appBadge = `<span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 text-[11px] font-medium border border-slate-700/60">${escapeHtml(c.browser || 'Khác')}</span>`;
+      if ((c.browser || '').includes('Facebook')) {
+        appBadge = `<span class="px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300 text-[11px] font-semibold border border-blue-500/30 flex items-center gap-1 w-fit"><i class="fa-brands fa-facebook"></i> Facebook App</span>`;
+      } else if ((c.browser || '').includes('Zalo')) {
+        appBadge = `<span class="px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-300 text-[11px] font-semibold border border-sky-500/30 flex items-center gap-1 w-fit"><i class="fa-solid fa-comment-dots"></i> Zalo App</span>`;
+      } else if ((c.browser || '').includes('TikTok')) {
+        appBadge = `<span class="px-2 py-0.5 rounded-md bg-pink-500/20 text-pink-300 text-[11px] font-semibold border border-pink-500/30 flex items-center gap-1 w-fit"><i class="fa-brands fa-tiktok"></i> TikTok App</span>`;
+      }
+
+      let devIcon = '<i class="fa-solid fa-laptop text-slate-400 me-1.5"></i>';
+      if ((c.device_type || '').includes('Điện thoại') || (c.device || '').includes('iPhone') || (c.device || '').includes('Samsung') || (c.os || '').includes('Android') || (c.os || '').includes('iOS')) {
+        devIcon = '<i class="fa-solid fa-mobile-screen text-emerald-400 me-1.5"></i>';
+      }
+
+      const shortUrl = c.domain ? `https://${c.domain}/${c.slug}` : `/${c.slug}`;
+
+      let onsiteBadge = '';
+      if (c.is_onsite_3m) {
+        onsiteBadge = `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-500/40 inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Onsite</span>`;
+      }
+
+      const rowClass = isNew
+        ? "bg-emerald-500/20 hover:bg-slate-800/40 transition-all duration-1000 border-l-4 border-emerald-400"
+        : "hover:bg-slate-800/40 transition";
+
+      return `
+        <tr class="${rowClass}" id="click-row-${c.id || Math.random()}">
+          <td class="py-3 px-4 whitespace-nowrap">
+            <div class="flex items-center gap-1.5">
+              <span class="font-mono text-emerald-400 font-semibold text-xs">${escapeHtml(c.click_time || '')}</span>
+              ${onsiteBadge}
+            </div>
+          </td>
+          <td class="py-3 px-4 whitespace-nowrap">
+            <div class="flex items-center gap-1.5">
+              <a href="${shortUrl}" target="_blank" class="font-mono text-blue-400 hover:underline font-bold text-xs" title="${escapeHtml(c.link_title || '')}">
+                /${escapeHtml(c.slug)}
+              </a>
+              <span class="text-[10px] text-slate-400 truncate max-w-[130px]" title="${escapeHtml(c.link_title || '')}">
+                (${escapeHtml(c.link_title || '')})
+              </span>
+            </div>
+          </td>
+          <td class="py-3 px-4 whitespace-nowrap text-amber-300 font-medium">
+            <i class="fa-solid fa-location-dot text-red-400 text-[10px] me-1"></i>${escapeHtml(c.city || 'Đà Nẵng')}
+          </td>
+          <td class="py-3 px-4 whitespace-nowrap font-medium text-white">
+            <div class="flex items-center">${devIcon}${escapeHtml(c.device || 'Không xác định')}</div>
+          </td>
+          <td class="py-3 px-4 whitespace-nowrap text-slate-300">
+            ${escapeHtml(c.os || '')}
+          </td>
+          <td class="py-3 px-4 whitespace-nowrap">
+            ${appBadge}
+          </td>
+          <td class="py-3 px-4 font-mono text-slate-400 whitespace-nowrap text-[11px]">
+            ${escapeHtml(c.ip || '')}
+          </td>
+          <td class="py-3 px-4 whitespace-nowrap text-slate-400 text-[11px]">
+            ${escapeHtml(c.referrer || 'Direct')}
+          </td>
+        </tr>
+      `;
     }
 
     // Tự động tải bảng lịch sử click người dùng thật trên Dashboard
@@ -608,6 +706,16 @@
         const data = await res.json();
         const clicks = data.recentClicks || [];
 
+        // Cập nhật số đếm Onsite 3 phút qua
+        if (data.onsiteClicks !== undefined) {
+          if (document.getElementById('statOnsiteClicks')) {
+            document.getElementById('statOnsiteClicks').textContent = data.onsiteClicks;
+          }
+          if (document.getElementById('textOnsiteCount')) {
+            document.getElementById('textOnsiteCount').textContent = data.onsiteClicks;
+          }
+        }
+
         if (clicks.length === 0) {
           tbody.innerHTML = `
             <tr>
@@ -621,63 +729,83 @@
           return;
         }
 
-        tbody.innerHTML = clicks.map(c => {
-          let appBadge = `<span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 text-[11px] font-medium border border-slate-700/60">${escapeHtml(c.browser || 'Khác')}</span>`;
-          if ((c.browser || '').includes('Facebook')) {
-            appBadge = `<span class="px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300 text-[11px] font-semibold border border-blue-500/30 flex items-center gap-1 w-fit"><i class="fa-brands fa-facebook"></i> Facebook App</span>`;
-          } else if ((c.browser || '').includes('Zalo')) {
-            appBadge = `<span class="px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-300 text-[11px] font-semibold border border-sky-500/30 flex items-center gap-1 w-fit"><i class="fa-solid fa-comment-dots"></i> Zalo App</span>`;
-          } else if ((c.browser || '').includes('TikTok')) {
-            appBadge = `<span class="px-2 py-0.5 rounded-md bg-pink-500/20 text-pink-300 text-[11px] font-semibold border border-pink-500/30 flex items-center gap-1 w-fit"><i class="fa-brands fa-tiktok"></i> TikTok App</span>`;
-          }
-
-          let devIcon = '<i class="fa-solid fa-laptop text-slate-400 me-1.5"></i>';
-          if ((c.device_type || '').includes('Điện thoại') || (c.device || '').includes('iPhone') || (c.device || '').includes('Samsung') || (c.os || '').includes('Android') || (c.os || '').includes('iOS')) {
-            devIcon = '<i class="fa-solid fa-mobile-screen text-emerald-400 me-1.5"></i>';
-          }
-
-          const shortUrl = c.domain ? `https://${c.domain}/${c.slug}` : `/${c.slug}`;
-
-          return `
-            <tr class="hover:bg-slate-800/40 transition">
-              <td class="py-3 px-4 font-mono text-emerald-400 font-semibold whitespace-nowrap">
-                <i class="fa-regular fa-clock text-[10px] me-1 text-slate-500"></i>${escapeHtml(c.click_time || '')}
-              </td>
-              <td class="py-3 px-4 whitespace-nowrap">
-                <div class="flex items-center gap-1.5">
-                  <a href="${shortUrl}" target="_blank" class="font-mono text-blue-400 hover:underline font-bold text-xs" title="${escapeHtml(c.link_title || '')}">
-                    /${escapeHtml(c.slug)}
-                  </a>
-                  <span class="text-[10px] text-slate-400 truncate max-w-[130px]" title="${escapeHtml(c.link_title || '')}">
-                    (${escapeHtml(c.link_title || '')})
-                  </span>
-                </div>
-              </td>
-              <td class="py-3 px-4 whitespace-nowrap text-amber-300 font-medium">
-                <i class="fa-solid fa-location-dot text-red-400 text-[10px] me-1"></i>${escapeHtml(c.city || 'Đà Nẵng')}
-              </td>
-              <td class="py-3 px-4 whitespace-nowrap font-medium text-white">
-                <div class="flex items-center">${devIcon}${escapeHtml(c.device || 'Không xác định')}</div>
-              </td>
-              <td class="py-3 px-4 whitespace-nowrap text-slate-300">
-                ${escapeHtml(c.os || '')}
-              </td>
-              <td class="py-3 px-4 whitespace-nowrap">
-                ${appBadge}
-              </td>
-              <td class="py-3 px-4 font-mono text-slate-400 whitespace-nowrap text-[11px]">
-                ${escapeHtml(c.ip || '')}
-              </td>
-              <td class="py-3 px-4 whitespace-nowrap text-slate-400 text-[11px]">
-                ${escapeHtml(c.referrer || 'Direct')}
-              </td>
-            </tr>
-          `;
-        }).join('');
+        tbody.innerHTML = clicks.map(c => buildClickRowHtml(c)).join('');
       } catch (err) {
         console.error('Lỗi tải bảng click trực tiếp:', err);
       } finally {
         if (icon) setTimeout(() => icon.classList.remove('fa-spin'), 400);
+      }
+    }
+
+    // Xử lý khi có click mới Realtime qua Server-Sent Events (SSE)
+    function handleRealtimeNewClick(click) {
+      const tbody = document.getElementById('dashboardRecentClicksBody');
+      if (!tbody) return;
+
+      if (tbody.innerHTML.includes('Chưa có lượt click') || tbody.innerHTML.includes('Đang tải')) {
+        tbody.innerHTML = '';
+      }
+
+      // Đánh dấu click mới là onsite trong 3 phút
+      click.is_onsite_3m = true;
+
+      // Chèn hàng mới lên đầu bảng với hiệu ứng sáng xanh
+      const newRowHtml = buildClickRowHtml(click, true);
+      tbody.insertAdjacentHTML('afterbegin', newRowHtml);
+
+      // Cập nhật số thống kê tổng quan ngay lập tức
+      const elTotal = document.getElementById('statTotalClicks');
+      if (elTotal) elTotal.textContent = (parseInt(elTotal.textContent.replace(/,/g, '')) || 0) + 1;
+
+      const elToday = document.getElementById('statTodayClicks');
+      if (elToday) elToday.textContent = (parseInt(elToday.textContent.replace(/,/g, '')) || 0) + 1;
+
+      const elOnsite = document.getElementById('statOnsiteClicks');
+      if (elOnsite) elOnsite.textContent = (parseInt(elOnsite.textContent.replace(/,/g, '')) || 0) + 1;
+
+      const elTextOnsite = document.getElementById('textOnsiteCount');
+      if (elTextOnsite) elTextOnsite.textContent = (parseInt(elTextOnsite.textContent) || 0) + 1;
+
+      // Cập nhật số click trên dòng của link tương ứng trong bảng links
+      if (allLinks && click.link_id) {
+        const found = allLinks.find(l => l.id === click.link_id || l.slug === click.slug);
+        if (found) {
+          found.clicks = (found.clicks || 0) + 1;
+          found.clicks_today = (found.clicks_today || 0) + 1;
+          renderLinks(allLinks);
+        }
+      }
+
+      // Xóa highlight sau 4 giây
+      setTimeout(() => {
+        const row = document.getElementById(`click-row-${click.id}`);
+        if (row) {
+          row.classList.remove('bg-emerald-500/20', 'border-l-4', 'border-emerald-400');
+        }
+      }, 4000);
+    }
+
+    // Khởi tạo kênh kết nối Realtime SSE
+    function initRealtimeStream() {
+      if (!window.EventSource) return;
+
+      try {
+        const evtSource = new EventSource('/api/realtime/stream');
+        evtSource.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'new_click' && data.click) {
+              handleRealtimeNewClick(data.click);
+            }
+          } catch (e) {
+            console.error('SSE Error:', e);
+          }
+        };
+        evtSource.onerror = () => {
+          // Trình duyệt tự động reconnect khi mất kết nối
+        };
+      } catch (err) {
+        console.error('Không thể tạo EventSource:', err);
       }
     }
 
@@ -1217,8 +1345,8 @@
 
     loadDashboard();
 
-    // Tự động làm mới bảng lịch sử click mỗi 10 giây trong nền
-    setInterval(loadRecentClicksTable, 10000);
+    // Quét kiểm tra onsite và đồng bộ dự phòng mỗi 5 giây
+    setInterval(loadRecentClicksTable, 5000);
   </script>
 </body>
 </html>

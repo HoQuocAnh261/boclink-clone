@@ -10,6 +10,7 @@ import { linkController } from './controllers/linkController.js';
 import { redirectController } from './controllers/redirectController.js';
 import { domainController } from './controllers/domainController.js';
 import { optionalAuth, requireAuth, hashPassword, AuthRequest } from './utils/auth.js';
+import { registerRealtimeClient } from './utils/realtime.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -75,6 +76,9 @@ app.post('/api/links/shorten', requireAuth, linkController.shorten);
 app.get('/api/links', requireAuth, linkController.getMyLinks);
 app.get('/api/links/dashboard/overview', requireAuth, linkController.getDashboardOverview);
 app.get('/api/links/recent-clicks', requireAuth, linkController.getRecentClicks);
+app.get('/api/realtime/stream', optionalAuth, (req: AuthRequest, res) => {
+  registerRealtimeClient(res, req.user?.id);
+});
 app.get('/api/links/:id/analytics', requireAuth, linkController.getLinkAnalytics);
 app.put('/api/links/:id', requireAuth, linkController.updateLink);
 app.delete('/api/links/:id', requireAuth, linkController.deleteLink);

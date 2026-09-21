@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { db } from '../db/index.js';
 import { parseDeeplink } from '../utils/deeplink.js';
 import { isCrawlerBot, parseDeviceInfo, getGeoLocation } from '../utils/deviceParser.js';
+import { broadcastNewClick } from '../utils/realtime.js';
 
 function escapeHtml(text: string): string {
   if (!text) return '';
@@ -200,12 +201,38 @@ export const redirectController = {
           `).get(link.id, clientIp);
 
           if (!duplicateClick) {
-            db.prepare(`
+            const insertResult = db.prepare(`
               INSERT INTO clicks (link_id, ip, referrer, browser, os, device, device_type, country, city)
               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             `).run(link.id, clientIp, cleanReferrer, devInfo.browser, devInfo.os, devInfo.device, devInfo.deviceType, geoInfo.country, geoInfo.city);
 
             db.prepare('UPDATE links SET clicks = clicks + 1 WHERE id = ?').run(link.id);
+
+            // Bắn tín hiệu Realtime tức thì (0ms) tới giao diện Dashboard
+            try {
+              const now = new Date();
+              const timeStr = now.toLocaleTimeString('vi-VN', { hour12: false, timeZone: 'Asia/Ho_Chi_Minh' }) + ' ' + now.toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+              broadcastNewClick({
+                id: Number(insertResult.lastInsertRowid),
+                link_id: link.id,
+                slug: link.slug,
+                link_title: link.title || link.slug,
+                domain: link.domain || 'mozphim.online',
+                ip: clientIp,
+                referrer: cleanReferrer,
+                browser: devInfo.browser,
+                os: devInfo.os,
+                device: devInfo.device,
+                device_type: devInfo.deviceType,
+                city: geoInfo.city,
+                country: geoInfo.country,
+                created_at: now.toISOString(),
+                click_time: timeStr,
+                is_onsite_3m: true
+              });
+            } catch (broadcastErr) {
+              console.error('Realtime broadcast error:', broadcastErr);
+            }
           }
         } catch (err) {
           console.error('Error logging real click:', err);
