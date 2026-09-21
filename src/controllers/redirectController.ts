@@ -3,6 +3,16 @@ import { db } from '../db/index.js';
 import { UAParser } from 'ua-parser-js';
 import { parseDeeplink } from '../utils/deeplink.js';
 
+function escapeHtml(text: string): string {
+  if (!text) return '';
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 export const redirectController = {
   handleRedirect: (req: Request, res: Response) => {
     try {
@@ -125,6 +135,49 @@ export const redirectController = {
       }
 
       const destination = link.original_url;
+      const userAgentRaw = req.headers['user-agent'] || '';
+      const isBot = /facebookexternalhit|facebot|facebookcatalog|twitterbot|whatsapp|telegrambot|linkedinbot|pinterest|slackbot|vkshare|zalo/i.test(userAgentRaw);
+
+      // Nếu là Bot quét link của Facebook, Zalo, Telegram, Twitter -> Trả về thẻ OpenGraph HTML để hiển thị Preview tùy chỉnh
+      if (isBot) {
+        const ogTitle = link.og_title || link.title || 'Ưu đãi hấp dẫn';
+        const ogDesc = link.og_description || 'Bấm để xem chi tiết sản phẩm và ưu đãi trên ứng dụng.';
+        const ogImg = link.og_image || '';
+        const shortUrl = link.domain ? `https://${link.domain}/${link.slug}` : `https://${req.get('host')}/${link.slug}`;
+
+        return res.send(`<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>${escapeHtml(ogTitle)}</title>
+  <meta name="description" content="${escapeHtml(ogDesc)}">
+  
+  <!-- OpenGraph / Facebook / Zalo -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="${escapeHtml(shortUrl)}">
+  <meta property="og:title" content="${escapeHtml(ogTitle)}">
+  <meta property="og:description" content="${escapeHtml(ogDesc)}">
+  ${ogImg ? `<meta property="og:image" content="${escapeHtml(ogImg)}">
+  <meta property="og:image:secure_url" content="${escapeHtml(ogImg)}">` : ''}
+  <meta property="og:site_name" content="${escapeHtml(link.domain || req.get('host') || 'mozphim.online')}">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="${escapeHtml(shortUrl)}">
+  <meta name="twitter:title" content="${escapeHtml(ogTitle)}">
+  <meta name="twitter:description" content="${escapeHtml(ogDesc)}">
+  ${ogImg ? `<meta name="twitter:image" content="${escapeHtml(ogImg)}">` : ''}
+</head>
+<body>
+  <h1>${escapeHtml(ogTitle)}</h1>
+  <p>${escapeHtml(ogDesc)}</p>
+  ${ogImg ? `<img src="${escapeHtml(ogImg)}" alt="${escapeHtml(ogTitle)}">` : ''}
+  <script>
+    window.location.replace(${JSON.stringify(destination)});
+  </script>
+</body>
+</html>`);
+      }
 
       // 1. Chuyển hướng trực tiếp chuẩn như phim24h.online (Clean 302 Found, Content-Length: 0, no-cache)
       // Cho phép Facebook In-App Browser nhận lệnh chuyển hướng ngay lập tức và bung thẳng vào App TikTok/Shopee

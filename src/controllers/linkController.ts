@@ -22,7 +22,7 @@ export const linkController = {
         return res.status(401).json({ error: 'Hệ thống cá nhân: Vui lòng đăng nhập để tạo liên kết' });
       }
 
-      let { url, custom_slug, type, title, password, domain } = req.body;
+      let { url, custom_slug, type, title, password, domain, og_title, og_description, og_image } = req.body;
 
       if (!url) {
         return res.status(400).json({ error: 'Vui lòng cung cấp đường dẫn URL hợp lệ' });
@@ -69,10 +69,10 @@ export const linkController = {
       const selectedDomain = domain ? domain.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '') : null;
 
       const stmt = db.prepare(`
-        INSERT INTO links (user_id, title, original_url, slug, type, password, domain)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO links (user_id, title, original_url, slug, type, password, domain, og_title, og_description, og_image)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
-      const result = stmt.run(userId, linkTitle, url, slug, linkType, password || null, selectedDomain);
+      const result = stmt.run(userId, linkTitle, url, slug, linkType, password || null, selectedDomain, og_title || null, og_description || null, og_image || null);
       const linkId = Number(result.lastInsertRowid);
 
       const baseUrl = config.getBaseUrl(req);
@@ -88,6 +88,9 @@ export const linkController = {
           slug,
           type: linkType,
           domain: selectedDomain,
+          og_title: og_title || null,
+          og_description: og_description || null,
+          og_image: og_image || null,
           short_url: shortUrl,
           qr_code: qrCodeDataUrl,
           created_at: new Date().toISOString()
@@ -203,7 +206,7 @@ export const linkController = {
       }
 
       const linkId = req.params.id;
-      const { title, original_url, type, is_active } = req.body;
+      const { title, original_url, type, is_active, domain, og_title, og_description, og_image } = req.body;
 
       const link = db.prepare('SELECT id FROM links WHERE id = ? AND user_id = ?').get(linkId, req.user.id);
       if (!link) {
@@ -224,6 +227,22 @@ export const linkController = {
       if (type !== undefined && ['direct', 'cloak', 'deeplink'].includes(type)) {
         updates.push('type = ?');
         params.push(type);
+      }
+      if (domain !== undefined) {
+        updates.push('domain = ?');
+        params.push(domain ? domain.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '') : null);
+      }
+      if (og_title !== undefined) {
+        updates.push('og_title = ?');
+        params.push(og_title ? og_title.trim() : null);
+      }
+      if (og_description !== undefined) {
+        updates.push('og_description = ?');
+        params.push(og_description ? og_description.trim() : null);
+      }
+      if (og_image !== undefined) {
+        updates.push('og_image = ?');
+        params.push(og_image ? og_image.trim() : null);
       }
       if (is_active !== undefined) {
         updates.push('is_active = ?');

@@ -37,6 +37,9 @@ export function initDB() {
       slug TEXT UNIQUE NOT NULL,
       type TEXT DEFAULT 'direct', -- 'direct', 'cloak', 'deeplink'
       domain TEXT NULL,           -- Tên miền tùy chỉnh (ví dụ: phim24h.online)
+      og_title TEXT NULL,         -- Tiêu đề preview Facebook / Zalo
+      og_description TEXT NULL,   -- Mô tả preview
+      og_image TEXT NULL,         -- Link ảnh thumbnail preview
       password TEXT NULL,
       clicks INTEGER DEFAULT 0,
       is_active INTEGER DEFAULT 1,
@@ -71,9 +74,18 @@ export function initDB() {
     CREATE INDEX IF NOT EXISTS idx_clicks_link ON clicks(link_id);
   `);
 
-  // Thêm cột domain vào bảng links nếu trước đó chưa có
+  // Thêm các cột mới vào bảng links nếu trước đó chưa có
   try {
     db.exec(`ALTER TABLE links ADD COLUMN domain TEXT NULL;`);
+  } catch (e) {}
+  try {
+    db.exec(`ALTER TABLE links ADD COLUMN og_title TEXT NULL;`);
+  } catch (e) {}
+  try {
+    db.exec(`ALTER TABLE links ADD COLUMN og_description TEXT NULL;`);
+  } catch (e) {}
+  try {
+    db.exec(`ALTER TABLE links ADD COLUMN og_image TEXT NULL;`);
   } catch (e) {}
 
   // Khởi tạo danh sách các domain mẫu ban đầu nếu bảng domains đang trống

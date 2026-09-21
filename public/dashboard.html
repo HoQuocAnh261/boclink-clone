@@ -201,9 +201,136 @@
                  class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-emerald-500">
         </div>
 
+        <!-- Tùy chỉnh Thẻ Xem Trước (Preview Facebook/Zalo) -->
+        <div class="p-3.5 bg-slate-900/90 rounded-xl border border-slate-700/80 space-y-3">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <span class="font-bold text-emerald-400 flex items-center gap-1.5 text-xs">
+              <i class="fa-solid fa-image"></i> Tùy Chỉnh Thẻ Xem Trước (Preview Facebook / Zalo)
+            </span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 font-semibold">Tăng Click</span>
+          </div>
+
+          <div>
+            <label class="block text-slate-300 font-medium mb-1">Tiêu đề Preview (OG Title)</label>
+            <input type="text" id="mOgTitle" oninput="updateLivePreview('create')" placeholder="Ví dụ: 5D Thịnh Phát- Thùng 100 Chiếc Khẩu Trang..."
+                   class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:border-emerald-500">
+          </div>
+
+          <div>
+            <label class="block text-slate-300 font-medium mb-1">Mô tả Preview (OG Description)</label>
+            <input type="text" id="mOgDesc" oninput="updateLivePreview('create')" placeholder="Ví dụ: Khẩu trang 3 lớp chống tia UV, ưu đãi 50% hôm nay..."
+                   class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:border-emerald-500">
+          </div>
+
+          <div>
+            <label class="block text-slate-300 font-medium mb-1">Đường dẫn ảnh Thumbnail Preview (OG Image URL)</label>
+            <input type="url" id="mOgImage" oninput="updateLivePreview('create')" placeholder="https://... dán link ảnh sản phẩm vào đây"
+                   class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:border-emerald-500">
+          </div>
+
+          <!-- Khung xem trước trực tiếp mô phỏng Facebook Preview y hệt ảnh người dùng gửi -->
+          <div>
+            <div class="text-[11px] font-semibold text-slate-400 mb-1.5 flex items-center gap-1">
+              <i class="fa-brands fa-facebook text-blue-400"></i> Mô phỏng hiển thị trên Facebook / Zalo:
+            </div>
+            <div class="bg-[#18191a] border border-[#3a3b3c] rounded-xl overflow-hidden shadow-md flex items-center">
+              <div class="w-24 h-24 sm:w-28 sm:h-28 bg-[#242526] flex-shrink-0 flex items-center justify-center overflow-hidden border-r border-[#3a3b3c]">
+                <img id="createPreviewImg" src="" alt="" class="w-full h-full object-cover hidden">
+                <i id="createPreviewIcon" class="fa-solid fa-image text-slate-500 text-2xl"></i>
+              </div>
+              <div class="p-2.5 flex-1 min-w-0">
+                <div id="createPreviewDomain" class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider truncate mb-0.5">MOZPHIM.ONLINE</div>
+                <div id="createPreviewTitle" class="text-xs font-bold text-slate-100 line-clamp-2 leading-snug mb-1">5D Thịnh Phát- Thùng 100 Chiếc Khẩu Trang 3 Lớp Chống Tia UV</div>
+                <div id="createPreviewDesc" class="text-[11px] text-slate-400 line-clamp-1">Mô tả xem trước sản phẩm...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-800">
           <button type="button" onclick="closeCreateModal()" class="px-4 py-2 bg-slate-800 text-slate-300 hover:bg-slate-700 rounded-xl font-medium">Hủy bỏ</button>
           <button type="submit" id="btnModalSubmit" class="px-5 py-2 bg-gradient-brand text-white font-bold rounded-xl hover:opacity-90">Tạo ngay</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Chỉnh Sửa Preview & Link (Edit Modal) -->
+  <div id="editModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+    <div class="card-glass max-w-xl w-full p-6 rounded-2xl shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-pen-to-square text-emerald-400"></i> Chỉnh Sửa Thẻ Xem Trước & Liên Kết
+        </h3>
+        <button onclick="closeEditModal()" class="text-slate-400 hover:text-white text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="modalEditForm" class="space-y-4 text-xs">
+        <input type="hidden" id="editId">
+
+        <div>
+          <label class="block font-medium text-slate-300 mb-1">Tiêu đề quản lý</label>
+          <input type="text" id="editTitle" required
+                 class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-emerald-500">
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-300 mb-1">Đường dẫn đích gốc (Target URL)</label>
+          <input type="url" id="editUrl" required
+                 class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-emerald-500">
+        </div>
+
+        <!-- Tùy chỉnh Thẻ Xem Trước (Preview Facebook/Zalo) -->
+        <div class="p-3.5 bg-slate-900/90 rounded-xl border border-slate-700/80 space-y-3">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <span class="font-bold text-emerald-400 flex items-center gap-1.5 text-xs">
+              <i class="fa-solid fa-image"></i> Thẻ Xem Trước (Preview Facebook / Zalo)
+            </span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-300 font-semibold">Live Preview</span>
+          </div>
+
+          <div>
+            <label class="block text-slate-300 font-medium mb-1">Tiêu đề Preview (OG Title)</label>
+            <input type="text" id="editOgTitle" oninput="updateLivePreview('edit')" placeholder="Ví dụ: 5D Thịnh Phát- Thùng 100 Chiếc Khẩu Trang..."
+                   class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:border-emerald-500">
+          </div>
+
+          <div>
+            <label class="block text-slate-300 font-medium mb-1">Mô tả Preview (OG Description)</label>
+            <input type="text" id="editOgDesc" oninput="updateLivePreview('edit')" placeholder="Ví dụ: Khẩu trang 3 lớp chống tia UV, ưu đãi 50%..."
+                   class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:border-emerald-500">
+          </div>
+
+          <div>
+            <label class="block text-slate-300 font-medium mb-1">Link ảnh đại diện xem trước (OG Image URL)</label>
+            <input type="url" id="editOgImage" oninput="updateLivePreview('edit')" placeholder="https://... link ảnh sản phẩm"
+                   class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:border-emerald-500">
+          </div>
+
+          <!-- Khung xem trước trực tiếp mô phỏng Facebook Preview -->
+          <div>
+            <div class="text-[11px] font-semibold text-slate-400 mb-1.5 flex items-center gap-1">
+              <i class="fa-brands fa-facebook text-blue-400"></i> Mô phỏng hiển thị trên Facebook / Zalo:
+            </div>
+            <div class="bg-[#18191a] border border-[#3a3b3c] rounded-xl overflow-hidden shadow-md flex items-center">
+              <div class="w-24 h-24 sm:w-28 sm:h-28 bg-[#242526] flex-shrink-0 flex items-center justify-center overflow-hidden border-r border-[#3a3b3c]">
+                <img id="editPreviewImg" src="" alt="" class="w-full h-full object-cover hidden">
+                <i id="editPreviewIcon" class="fa-solid fa-image text-slate-500 text-2xl"></i>
+              </div>
+              <div class="p-2.5 flex-1 min-w-0">
+                <div id="editPreviewDomain" class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider truncate mb-0.5">MOZPHIM.ONLINE</div>
+                <div id="editPreviewTitle" class="text-xs font-bold text-slate-100 line-clamp-2 leading-snug mb-1">Tiêu đề xem trước...</div>
+                <div id="editPreviewDesc" class="text-[11px] text-slate-400 line-clamp-1">Mô tả xem trước...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-800">
+          <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-slate-800 text-slate-300 hover:bg-slate-700 rounded-xl font-medium">Hủy bỏ</button>
+          <button type="submit" id="btnEditSubmit" class="px-5 py-2 bg-gradient-brand text-white font-bold rounded-xl hover:opacity-90">Lưu thay đổi</button>
         </div>
       </form>
     </div>
@@ -384,17 +511,30 @@
         return `
           <tr class="hover:bg-slate-800/40 transition">
             <td class="py-4 px-6">
-              <div class="font-bold text-white text-sm mb-1">${escapeHtml(link.title || link.slug)}</div>
-              <div class="flex items-center gap-2 mb-1">
-                <a href="${link.short_url}" target="_blank" class="font-mono text-emerald-400 hover:underline flex items-center gap-1 font-semibold">
-                  ${link.short_url} <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-                </a>
-                <button onclick="copyToClipboard('${link.short_url}')" class="text-slate-400 hover:text-white text-xs px-1.5 py-0.5 rounded bg-slate-800">
-                  <i class="fa-solid fa-copy"></i>
-                </button>
-              </div>
-              <div class="text-slate-500 text-[11px] truncate max-w-xs" title="${escapeHtml(link.original_url)}">
-                <i class="fa-solid fa-arrow-turn-down-right me-1"></i>${escapeHtml(link.original_url)}
+              <div class="flex items-start gap-3">
+                ${link.og_image ? `
+                  <img src="${escapeHtml(link.og_image)}" alt="" class="w-12 h-12 rounded-xl object-cover bg-slate-900 border border-slate-700 flex-shrink-0" onerror="this.src='';this.classList.add('hidden')">
+                ` : `
+                  <div class="w-12 h-12 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500 flex-shrink-0">
+                    <i class="fa-solid fa-link text-xs"></i>
+                  </div>
+                `}
+                <div class="min-w-0 flex-1">
+                  <div class="font-bold text-white text-sm mb-1 truncate max-w-xs" title="${escapeHtml(link.og_title || link.title || link.slug)}">
+                    ${escapeHtml(link.og_title || link.title || link.slug)}
+                  </div>
+                  <div class="flex items-center gap-2 mb-1">
+                    <a href="${link.short_url}" target="_blank" class="font-mono text-emerald-400 hover:underline flex items-center gap-1 font-semibold text-xs">
+                      ${link.short_url} <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                    </a>
+                    <button onclick="copyToClipboard('${link.short_url}')" class="text-slate-400 hover:text-white text-xs px-1.5 py-0.5 rounded bg-slate-800">
+                      <i class="fa-solid fa-copy"></i>
+                    </button>
+                  </div>
+                  <div class="text-slate-500 text-[11px] truncate max-w-xs" title="${escapeHtml(link.original_url)}">
+                    <i class="fa-solid fa-arrow-turn-down-right me-1"></i>${escapeHtml(link.original_url)}
+                  </div>
+                </div>
               </div>
             </td>
 
@@ -418,6 +558,9 @@
 
             <td class="py-4 px-6 text-right whitespace-nowrap">
               <div class="flex items-center justify-end gap-2">
+                <button onclick="openEditModal(${link.id})" title="Sửa Preview Facebook & Link" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-emerald-500/20 hover:text-emerald-400 text-slate-300 flex items-center justify-center transition">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
                 <button onclick="viewAnalytics(${link.id}, '${link.slug}')" title="Xem Thống Kê" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition">
                   <i class="fa-solid fa-chart-column"></i>
                 </button>
@@ -591,6 +734,98 @@
       }
     }
 
+    // Live Preview Cập nhật tức thì
+    function updateLivePreview(mode) {
+      const isEdit = mode === 'edit';
+      const titleIn = document.getElementById(isEdit ? 'editOgTitle' : 'mOgTitle').value.trim();
+      const descIn = document.getElementById(isEdit ? 'editOgDesc' : 'mOgDesc').value.trim();
+      const imgIn = document.getElementById(isEdit ? 'editOgImage' : 'mOgImage').value.trim();
+
+      const prefix = isEdit ? 'edit' : 'create';
+      const titleEl = document.getElementById(prefix + 'PreviewTitle');
+      const descEl = document.getElementById(prefix + 'PreviewDesc');
+      const imgEl = document.getElementById(prefix + 'PreviewImg');
+      const iconEl = document.getElementById(prefix + 'PreviewIcon');
+
+      if (titleEl) {
+        titleEl.textContent = titleIn || '5D Thịnh Phát- Thùng 100 Chiếc Khẩu Trang 3 Lớp Chống Tia UV';
+      }
+      if (descEl) {
+        descEl.textContent = descIn || 'Mô tả xem trước sản phẩm...';
+      }
+
+      if (imgIn && imgEl && iconEl) {
+        imgEl.src = imgIn;
+        imgEl.classList.remove('hidden');
+        iconEl.classList.add('hidden');
+        imgEl.onerror = () => {
+          imgEl.classList.add('hidden');
+          iconEl.classList.remove('hidden');
+        };
+      } else if (imgEl && iconEl) {
+        imgEl.classList.add('hidden');
+        iconEl.classList.remove('hidden');
+      }
+    }
+
+    // Modal Edit Link & Preview
+    function openEditModal(id) {
+      const link = allLinks.find(l => l.id === id);
+      if (!link) return;
+
+      document.getElementById('editId').value = link.id;
+      document.getElementById('editTitle').value = link.title || '';
+      document.getElementById('editUrl').value = link.original_url || '';
+      document.getElementById('editOgTitle').value = link.og_title || '';
+      document.getElementById('editOgDesc').value = link.og_description || '';
+      document.getElementById('editOgImage').value = link.og_image || '';
+
+      const domainDisplay = document.getElementById('editPreviewDomain');
+      if (domainDisplay) {
+        domainDisplay.textContent = (link.domain || 'MOZPHIM.ONLINE').toUpperCase();
+      }
+
+      updateLivePreview('edit');
+      document.getElementById('editModal').classList.remove('hidden');
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').classList.add('hidden');
+    }
+
+    document.getElementById('modalEditForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('editId').value;
+      const title = document.getElementById('editTitle').value.trim();
+      const original_url = document.getElementById('editUrl').value.trim();
+      const og_title = document.getElementById('editOgTitle').value.trim();
+      const og_description = document.getElementById('editOgDesc').value.trim();
+      const og_image = document.getElementById('editOgImage').value.trim();
+
+      const btn = document.getElementById('btnEditSubmit');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin me-1"></i> Đang lưu...`;
+
+      try {
+        const res = await fetch(`/api/links/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, original_url, og_title, og_description, og_image })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Lỗi cập nhật');
+
+        closeEditModal();
+        alert('Đã cập nhật Thẻ Xem Trước (Preview) thành công!');
+        loadDashboard();
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Lưu thay đổi';
+      }
+    });
+
     document.getElementById('modalCreateForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const title = document.getElementById('mTitle').value.trim();
@@ -599,12 +834,15 @@
       const custom_slug = document.getElementById('mSlug').value.trim();
       const type = document.getElementById('mType').value;
       const password = document.getElementById('mPassword').value.trim();
+      const og_title = document.getElementById('mOgTitle').value.trim();
+      const og_description = document.getElementById('mOgDesc').value.trim();
+      const og_image = document.getElementById('mOgImage').value.trim();
 
       try {
         const res = await fetch('/api/links/shorten', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, url, domain, custom_slug, type, password })
+          body: JSON.stringify({ title, url, domain, custom_slug, type, password, og_title, og_description, og_image })
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Lỗi tạo link');
