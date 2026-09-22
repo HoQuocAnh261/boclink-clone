@@ -113,7 +113,7 @@ export const redirectController = {
       // Với link 'cloak' hoặc link có custom preview (không phải direct): Trả về thẻ OpenGraph
       // Với link 'direct': Cho bot nhận thẳng 302 để Facebook nhận diện đúng đích đến
       const hasCustomPreview = !!(link.og_title || link.og_image);
-      if (isBot && (link.type === 'preview' || link.type === 'cloak' || (hasCustomPreview && link.type !== 'direct'))) {
+      if (isBot && (link.type === 'preview' || link.type === 'deeplink' || link.type === 'cloak' || (hasCustomPreview && link.type !== 'direct'))) {
         const ogTitle = link.og_title || link.title || 'Mở trên ứng dụng';
         const ogDesc = link.og_description || 'Bấm để xem chi tiết sản phẩm và ưu đãi trên ứng dụng.';
         const ogImg = link.og_image || '';
@@ -244,7 +244,7 @@ export const redirectController = {
 
       // 1. Chế độ Chuyển hướng trực tiếp 302 (Chuẩn phim36h.online / phim24h.online / Short.io)
       // Cho phép Facebook In-App Browser nhận lệnh chuyển hướng ngay lập tức và bung thẳng vào App TikTok/Shopee
-      if (link.type === 'direct' || link.type === 'deeplink') {
+      if (link.type === 'direct') {
         res.writeHead(302, {
           'Location': destination,
           'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -253,6 +253,81 @@ export const redirectController = {
           'Content-Length': '0'
         });
         return res.end();
+      }
+
+      // 2. Chế độ SmartLink Deep Link TikTok Shop (Bypass Facebook In-App Browser, Nhảy thẳng App TikTok)
+      if (link.type === 'deeplink') {
+        const ogTitle = link.og_title || link.title || 'Đang chuyển hướng tới TikTok Shop...';
+        const ogDesc = link.og_description || 'Bấm để mở sản phẩm và nhận ưu đãi trên ứng dụng TikTok';
+        const ogImg = link.og_image || '';
+        const shortUrl = link.domain ? `https://${link.domain}/${link.slug}` : `https://${req.get('host')}/${link.slug}`;
+        const appUrl = 'snssdk1180://ec/pdp?biz_type=0&need_mall=1&needlaunchlog=1&page_name=reflow_pdp&params_url=' + encodeURIComponent(destination);
+
+        return res.status(200).send(`<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${escapeHtml(ogTitle)}</title>
+  
+  <!-- OpenGraph Metadata để Facebook hiển thị ảnh và tiêu đề chuẩn -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="${escapeHtml(shortUrl)}">
+  <meta property="og:title" content="${escapeHtml(ogTitle)}">
+  <meta property="og:description" content="${escapeHtml(ogDesc)}">
+  ${ogImg ? `<meta property="og:image" content="${escapeHtml(ogImg)}"><meta property="og:image:secure_url" content="${escapeHtml(ogImg)}">` : ''}
+  <meta property="og:site_name" content="${escapeHtml(link.domain || req.get('host') || 'mozphim.online')}">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${escapeHtml(ogTitle)}">
+  <meta name="twitter:description" content="${escapeHtml(ogDesc)}">
+  ${ogImg ? `<meta name="twitter:image" content="${escapeHtml(ogImg)}">` : ''}
+</head>
+<body style="margin:0; background:#f8f9fa; font-family:sans-serif; display:flex; align-items:center; justify-content:center; height:100vh; text-align:center;">
+  <div>
+    <p style="font-size:16px; color:#555;">Đang chuyển hướng tới <b>TikTok App</b>...</p>
+    <div style="margin:20px auto; width:40px; height:40px; border:4px solid #f3f3f3; border-top:4px solid #fe2c55; border-radius:50%; animation:spin 1s linear infinite;"></div>
+    <a id="btnManual" href="${escapeHtml(appUrl)}" style="display:inline-block; margin-top:15px; padding:10px 20px; background:#fe2c55; color:#fff; text-decoration:none; border-radius:6px; font-weight:bold;">Bấm vào đây nếu chưa chuyển tiếp</a>
+  </div>
+
+  <style>
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+
+  <script>
+    (function() {
+      var rawAffiliateUrl = ${JSON.stringify(destination)};
+      
+      // Xây dựng Deep Link Scheme cho App TikTok Shop
+      var appUrl = "snssdk1180://ec/pdp?biz_type=0&need_mall=1&needlaunchlog=1&page_name=reflow_pdp&params_url=" + encodeURIComponent(rawAffiliateUrl);
+      var fallbackUrl = rawAffiliateUrl;
+
+      document.getElementById("btnManual").href = appUrl;
+
+      // Fallback về Web sau 1.8 giây nếu thiết bị không có App TikTok
+      var fallbackTimer = setTimeout(function() {
+        window.location.replace(fallbackUrl);
+      }, 1800);
+
+      function cancelFallback() {
+        clearTimeout(fallbackTimer);
+      }
+
+      // Nếu App TikTok mở lên (trang bị ẩn đi), hủy lệnh fallback
+      document.addEventListener("visibilitychange", function() {
+        if (document.hidden) {
+          cancelFallback();
+        }
+      });
+      window.addEventListener("pagehide", cancelFallback);
+
+      // Kích hoạt mở App TikTok
+      window.location.href = appUrl;
+    })();
+  </script>
+</body>
+</html>`);
       }
 
       // 2. Chế độ Rút gọn Thẻ Xem Trước Preview (Mã HTTP 200 OK, Đầy đủ thẻ og:title, og:image, og:description)

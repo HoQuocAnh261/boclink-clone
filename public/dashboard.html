@@ -254,6 +254,7 @@
           <label class="block font-medium text-slate-300 mb-1">Cơ chế chuyển hướng</label>
           <select id="mType" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-emerald-500">
             <option value="direct" selected>Direct 302 (Nhảy thẳng App - Chuẩn phim36h.online)</option>
+            <option value="deeplink">SmartLink Deep Link TikTok Shop (Bypass FB Browser, Nhảy thẳng App)</option>
             <option value="preview">OG Preview 200 OK (Thấy mã 200 OK, Thấy thẻ og:title, og:image đầy đủ)</option>
             <option value="cloak">Bọc Link Cloaking (Chống quét Facebook)</option>
           </select>
@@ -350,6 +351,7 @@
           <label class="block font-medium text-slate-300 mb-1">Cơ chế chuyển hướng</label>
           <select id="editType" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-emerald-500">
             <option value="direct">Direct 302 (Nhảy thẳng App - Chuẩn phim36h.online)</option>
+            <option value="deeplink">SmartLink Deep Link TikTok Shop (Bypass FB Browser, Nhảy thẳng App)</option>
             <option value="preview">OG Preview 200 OK (Thấy mã 200 OK, Thấy thẻ og:title, og:image đầy đủ)</option>
             <option value="cloak">Bọc Link Cloaking (Chống quét Facebook)</option>
           </select>
@@ -837,7 +839,7 @@
       tbody.innerHTML = links.map(link => {
         let typeBadge = '';
         if (link.type === 'deeplink') {
-          typeBadge = '<span class="px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 font-semibold text-[11px] border border-blue-500/20"><i class="fa-solid fa-mobile-screen me-1"></i>Deeplink</span>';
+          typeBadge = '<span class="px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-400 font-semibold text-[11px] border border-rose-500/20"><i class="fa-brands fa-tiktok me-1"></i>TikTok App</span>';
         } else if (link.type === 'cloak') {
           typeBadge = '<span class="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 font-semibold text-[11px] border border-emerald-500/20"><i class="fa-solid fa-shield-halved me-1"></i>Bọc Link</span>';
         } else if (link.type === 'preview') {
