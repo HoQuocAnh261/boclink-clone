@@ -109,9 +109,10 @@ export const redirectController = {
       const isBot = isCrawlerBot(userAgentRaw);
 
       // 1. NẾU LÀ BOT QUÉT LINK (Facebook Crawler, Zalo Bot, Googlebot...):
-      // Trả về thẻ OpenGraph HTML để Facebook/Zalo/Telegram ghim đích đến là mozphim.online
-      // TUYỆT ĐỐI KHÔNG TÍNH CLICK CHO BOT!
-      if (isBot) {
+      // Chỉ trả về thẻ OpenGraph HTML khi link là loại 'cloak' hoặc có chỉnh sửa preview riêng
+      // Với link 'direct' (chuẩn phim36h.online / Short.io): Cho bot nhận thẳng 302 để Facebook nhận diện đúng đích đến
+      const hasCustomPreview = !!(link.og_title || link.og_image);
+      if (isBot && (link.type === 'cloak' || (hasCustomPreview && link.type !== 'direct'))) {
         const ogTitle = link.og_title || link.title || 'Mở trên ứng dụng';
         const ogDesc = link.og_description || 'Bấm để xem chi tiết sản phẩm và ưu đãi trên ứng dụng.';
         const ogImg = link.og_image || '';
@@ -183,9 +184,9 @@ export const redirectController = {
       const acceptLang = req.headers['accept-language'] as string | undefined;
       const geoInfo = await getGeoLocation(clientIp, cfCountry, cfCity, acceptLang);
 
-      // YÊU CẦU: LOẠI TRỪ CÁC CLICK TỪ QUỐC GIA KHÁC VIỆT NAM
-      // Nếu KHÔNG phải từ Việt Nam -> Tuyệt đối không tính click (nhưng vẫn redirect cho người dùng)
-      if (geoInfo.isVietnam) {
+      // YÊU CẦU: LOẠI TRỪ CÁC CLICK TỪ QUỐC GIA KHÁC VIỆT NAM VÀ LOẠI TRỪ BOT
+      // Nếu KHÔNG phải từ Việt Nam hoặc là Bot -> Tuyệt đối không tính click (nhưng vẫn redirect cho người dùng)
+      if (!isBot && geoInfo.isVietnam) {
         // Phân tích thông tin Thiết bị, Hệ điều hành, App/Trình duyệt
         const devInfo = parseDeviceInfo(userAgentRaw);
 
