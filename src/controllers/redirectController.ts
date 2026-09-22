@@ -240,7 +240,20 @@ export const redirectController = {
       }
 
 
-      // 1. Chế độ Cloak / Bọc link (Ẩn nguồn, chống chặn link mạng xã hội)
+      // 1. Chế độ Chuyển hướng trực tiếp 302 (Chuẩn phim24h.online)
+      // Nhảy thẳng 100% không qua trang trung gian, không có nút bấm, mở thẳng App nếu là Universal Link
+      if (link.type === 'direct') {
+        res.writeHead(302, {
+          'Location': destination,
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'X-Content-Type-Options': 'nosniff',
+          'Content-Length': '0'
+        });
+        return res.end();
+      }
+
+      // 2. Chế độ Cloak / Bọc link (Ẩn nguồn, chống chặn link mạng xã hội)
       if (link.type === 'cloak') {
         return res.send(`
           <!DOCTYPE html>
@@ -283,12 +296,10 @@ export const redirectController = {
         `);
       }
 
-      // 2. Chế độ Smart Deeplink cho ứng dụng di động (TikTok, Shopee, Lazada, YouTube)
-      const deeplink = parseDeeplink(destination);
+      // 3. Chế độ Smart Deeplink (chỉ áp dụng khi link được chọn loại 'deeplink' trên di động)
       const isMobile = /mobile|iphone|ipod|ipad|android/i.test(userAgentRaw);
-
-      // Nếu người dùng truy cập từ điện thoại di động và đích đến là TikTok/Shopee/Lazada (hoặc type là deeplink)
-      if (isMobile && (deeplink.isDeeplinkable || link.type === 'deeplink')) {
+      const deeplink = parseDeeplink(destination);
+      if (isMobile && link.type === 'deeplink') {
         const ogTitle = link.og_title || link.title || `Mở trên ứng dụng ${deeplink.platform}`;
         const ogDesc = link.og_description || 'Bấm để xem chi tiết sản phẩm và ưu đãi trên ứng dụng.';
         const ogImg = link.og_image || '';

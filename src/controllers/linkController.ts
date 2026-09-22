@@ -64,9 +64,7 @@ export const linkController = {
         } while (attempts < 10);
       }
 
-      const linkType = ['direct', 'cloak', 'deeplink'].includes(type)
-        ? type
-        : (parseDeeplink(url).isDeeplinkable ? 'deeplink' : 'direct');
+      const linkType = ['direct', 'cloak', 'deeplink'].includes(type) ? type : 'direct';
       const userId = req.user ? req.user.id : null;
       const linkTitle = title ? title.trim() : (new URL(url)).hostname;
       let selectedDomain = domain ? domain.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '') : 'mozphim.online';
