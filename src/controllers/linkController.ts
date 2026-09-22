@@ -3,6 +3,7 @@ import { db } from '../db/index.js';
 import { AuthRequest } from '../utils/auth.js';
 import { config } from '../config.js';
 import QRCode from 'qrcode';
+import { parseDeeplink } from '../utils/deeplink.js';
 
 // Hàm sinh slug ngẫu nhiên 6 ký tự
 function generateRandomSlug(length = 6): string {
@@ -63,7 +64,9 @@ export const linkController = {
         } while (attempts < 10);
       }
 
-      const linkType = ['direct', 'cloak', 'deeplink'].includes(type) ? type : 'direct';
+      const linkType = ['direct', 'cloak', 'deeplink'].includes(type)
+        ? type
+        : (parseDeeplink(url).isDeeplinkable ? 'deeplink' : 'direct');
       const userId = req.user ? req.user.id : null;
       const linkTitle = title ? title.trim() : (new URL(url)).hostname;
       let selectedDomain = domain ? domain.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '') : 'mozphim.online';
