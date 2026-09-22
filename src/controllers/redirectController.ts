@@ -109,16 +109,17 @@ export const redirectController = {
       const isBot = isCrawlerBot(userAgentRaw);
 
       // 1. NẾU LÀ BOT QUÉT LINK (Facebook Crawler, Zalo Bot, Googlebot...):
-      // Chỉ trả về thẻ OpenGraph HTML khi link là loại 'cloak' hoặc có chỉnh sửa preview riêng
-      // Với link 'direct' (chuẩn phim36h.online / Short.io): Cho bot nhận thẳng 302 để Facebook nhận diện đúng đích đến
+      // Với link 'preview': Luôn trả về 200 OK kèm đầy đủ thẻ OpenGraph
+      // Với link 'cloak' hoặc link có custom preview (không phải direct): Trả về thẻ OpenGraph
+      // Với link 'direct': Cho bot nhận thẳng 302 để Facebook nhận diện đúng đích đến
       const hasCustomPreview = !!(link.og_title || link.og_image);
-      if (isBot && (link.type === 'cloak' || (hasCustomPreview && link.type !== 'direct'))) {
+      if (isBot && (link.type === 'preview' || link.type === 'cloak' || (hasCustomPreview && link.type !== 'direct'))) {
         const ogTitle = link.og_title || link.title || 'Mở trên ứng dụng';
         const ogDesc = link.og_description || 'Bấm để xem chi tiết sản phẩm và ưu đãi trên ứng dụng.';
         const ogImg = link.og_image || '';
         const shortUrl = link.domain ? `https://${link.domain}/${link.slug}` : `https://${req.get('host')}/${link.slug}`;
 
-        return res.send(`<!DOCTYPE html>
+        return res.status(200).send(`<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
@@ -241,7 +242,7 @@ export const redirectController = {
       }
 
 
-      // 1. Chuyển hướng trực tiếp chuẩn như phim24h.online (Clean 302 Found, Content-Length: 0, no-cache)
+      // 1. Chế độ Chuyển hướng trực tiếp 302 (Chuẩn phim36h.online / phim24h.online / Short.io)
       // Cho phép Facebook In-App Browser nhận lệnh chuyển hướng ngay lập tức và bung thẳng vào App TikTok/Shopee
       if (link.type === 'direct' || link.type === 'deeplink') {
         res.writeHead(302, {
@@ -252,6 +253,62 @@ export const redirectController = {
           'Content-Length': '0'
         });
         return res.end();
+      }
+
+      // 2. Chế độ Rút gọn Thẻ Xem Trước Preview (Mã HTTP 200 OK, Đầy đủ thẻ og:title, og:image, og:description)
+      if (link.type === 'preview') {
+        const ogTitle = link.og_title || link.title || 'Mở trên ứng dụng';
+        const ogDesc = link.og_description || 'Bấm để xem chi tiết sản phẩm và ưu đãi trên ứng dụng.';
+        const ogImg = link.og_image || '';
+        const shortUrl = link.domain ? `https://${link.domain}/${link.slug}` : `https://${req.get('host')}/${link.slug}`;
+
+        return res.status(200).send(`<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="refresh" content="0;url=${escapeHtml(destination)}">
+  <title>${escapeHtml(ogTitle)}</title>
+  <meta name="description" content="${escapeHtml(ogDesc)}">
+  
+  <!-- OpenGraph / Facebook / Zalo -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="${escapeHtml(shortUrl)}">
+  <meta property="og:title" content="${escapeHtml(ogTitle)}">
+  <meta property="og:description" content="${escapeHtml(ogDesc)}">
+  ${ogImg ? `<meta property="og:image" content="${escapeHtml(ogImg)}">
+  <meta property="og:image:secure_url" content="${escapeHtml(ogImg)}">` : ''}
+  <meta property="og:site_name" content="${escapeHtml(link.domain || req.get('host') || 'mozphim.online')}">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="${escapeHtml(shortUrl)}">
+  <meta name="twitter:title" content="${escapeHtml(ogTitle)}">
+  <meta name="twitter:description" content="${escapeHtml(ogDesc)}">
+  ${ogImg ? `<meta name="twitter:image" content="${escapeHtml(ogImg)}">` : ''}
+
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#0b101b] text-slate-100 flex flex-col items-center justify-center min-h-screen p-4 font-sans">
+  <div class="max-w-md w-full bg-[#131b2e] border border-slate-700/60 rounded-3xl p-6 text-center shadow-2xl">
+    ${ogImg ? `<div class="w-24 h-24 mx-auto mb-4 rounded-2xl overflow-hidden shadow-lg border border-slate-700"><img src="${escapeHtml(ogImg)}" class="w-full h-full object-cover" alt=""></div>` : ''}
+    <h2 class="text-base font-bold text-white mb-2 leading-snug">${escapeHtml(ogTitle)}</h2>
+    <p class="text-slate-400 text-xs mb-5 line-clamp-2">${escapeHtml(ogDesc)}</p>
+    
+    <div class="flex items-center justify-center gap-2 mb-4 text-emerald-400 text-xs font-medium">
+      <div class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></div>
+      <span>Đang tự động chuyển hướng...</span>
+    </div>
+    
+    <a href="${escapeHtml(destination)}" class="block w-full py-3 px-4 bg-gradient-to-r from-[#06557c] to-[#32af5e] text-white font-bold text-xs rounded-xl shadow-lg hover:opacity-95 transition">
+      Bấm vào đây nếu không tự chuyển hướng
+    </a>
+  </div>
+  <script>
+    window.location.replace(${JSON.stringify(destination)});
+  </script>
+</body>
+</html>`);
       }
 
       // 3. Chế độ Cloak / Bọc link (Ẩn nguồn, chống chặn link mạng xã hội)
