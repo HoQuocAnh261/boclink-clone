@@ -3,7 +3,6 @@ import { db } from '../db/index.js';
 import { AuthRequest } from '../utils/auth.js';
 import { config } from '../config.js';
 import QRCode from 'qrcode';
-import { parseDeeplink } from '../utils/deeplink.js';
 
 // Hàm sinh slug ngẫu nhiên 6 ký tự
 function generateRandomSlug(length = 6): string {

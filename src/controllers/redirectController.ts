@@ -240,9 +240,9 @@ export const redirectController = {
       }
 
 
-      // 1. Chế độ Chuyển hướng trực tiếp 302 (Chuẩn phim24h.online)
-      // Nhảy thẳng 100% không qua trang trung gian, không có nút bấm, mở thẳng App nếu là Universal Link
-      if (link.type === 'direct') {
+      // 1. Chuyển hướng trực tiếp chuẩn như phim24h.online (Clean 302 Found, Content-Length: 0, no-cache)
+      // Cho phép Facebook In-App Browser nhận lệnh chuyển hướng ngay lập tức và bung thẳng vào App TikTok/Shopee
+      if (link.type === 'direct' || link.type === 'deeplink') {
         res.writeHead(302, {
           'Location': destination,
           'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -253,275 +253,46 @@ export const redirectController = {
         return res.end();
       }
 
-      // 2. Chế độ Cloak / Bọc link (Ẩn nguồn, chống chặn link mạng xã hội)
-      if (link.type === 'cloak') {
-        return res.send(`
-          <!DOCTYPE html>
-          <html lang="vi">
-          <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <meta name="referrer" content="no-referrer">
-            <title>Đang chuyển hướng an toàn...</title>
-            <script src="https://cdn.tailwindcss.com"></script>
-          </head>
-          <body class="bg-[#0b101b] text-slate-100 flex flex-col items-center justify-center min-h-screen p-4 font-sans">
-            <div class="max-w-md w-full bg-[#131b2e] border border-slate-700/60 rounded-3xl p-8 text-center shadow-2xl">
-              <div class="relative w-20 h-20 mx-auto mb-6 flex items-center justify-center">
-                <div class="absolute inset-0 rounded-full border-4 border-emerald-500/20 border-t-emerald-500 animate-spin"></div>
-                <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-[#06557c] to-[#32af5e] flex items-center justify-center text-white text-xl">
-                  🛡️
-                </div>
-              </div>
-
-              <h2 class="text-xl font-bold mb-2">Đang kết nối an toàn</h2>
-              <p class="text-slate-400 text-xs mb-6">Đang chuyển tiếp tới trang đích trong giây lát...</p>
-
-              <a href="${destination}" rel="noreferrer" class="block w-full py-3 px-4 bg-gradient-to-r from-[#06557c] to-[#32af5e] text-white font-medium rounded-2xl shadow-lg hover:opacity-95 transition">
-                Bấm vào đây nếu không tự chuyển hướng
-              </a>
-
-              <div class="mt-8 pt-4 border-t border-slate-800 text-[11px] text-slate-500">
-                Được bảo vệ bởi <span class="text-emerald-400 font-semibold">BoclinkVN Cloaker</span>
+      // 3. Chế độ Cloak / Bọc link (Ẩn nguồn, chống chặn link mạng xã hội)
+      return res.send(`
+        <!DOCTYPE html>
+        <html lang="vi">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <meta name="referrer" content="no-referrer">
+          <title>Đang chuyển hướng an toàn...</title>
+          <script src="https://cdn.tailwindcss.com"></script>
+        </head>
+        <body class="bg-[#0b101b] text-slate-100 flex flex-col items-center justify-center min-h-screen p-4 font-sans">
+          <div class="max-w-md w-full bg-[#131b2e] border border-slate-700/60 rounded-3xl p-8 text-center shadow-2xl">
+            <div class="relative w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+              <div class="absolute inset-0 rounded-full border-4 border-emerald-500/20 border-t-emerald-500 animate-spin"></div>
+              <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-[#06557c] to-[#32af5e] flex items-center justify-center text-white text-xl">
+                🛡️
               </div>
             </div>
 
-            <script>
-              setTimeout(function() {
-                window.location.replace(${JSON.stringify(destination)});
-              }, 800);
-            </script>
-          </body>
-          </html>
-        `);
-      }
+            <h2 class="text-xl font-bold mb-2">Đang kết nối an toàn</h2>
+            <p class="text-slate-400 text-xs mb-6">Đang chuyển tiếp tới trang đích trong giây lát...</p>
 
-      // 3. Chế độ Smart Deeplink (chỉ áp dụng khi link được chọn loại 'deeplink' trên di động)
-      const isMobile = /mobile|iphone|ipod|ipad|android/i.test(userAgentRaw);
-      const deeplink = parseDeeplink(destination);
-      if (isMobile && link.type === 'deeplink') {
-        const ogTitle = link.og_title || link.title || `Mở trên ứng dụng ${deeplink.platform}`;
-        const ogDesc = link.og_description || 'Bấm để xem chi tiết sản phẩm và ưu đãi trên ứng dụng.';
-        const ogImg = link.og_image || '';
-        const shortUrl = link.domain ? `https://${link.domain}/${link.slug}` : `https://${req.get('host')}/${link.slug}`;
+            <a href="${destination}" rel="noreferrer" class="block w-full py-3 px-4 bg-gradient-to-r from-[#06557c] to-[#32af5e] text-white font-medium rounded-2xl shadow-lg hover:opacity-95 transition">
+              Bấm vào đây nếu không tự chuyển hướng
+            </a>
 
-        return res.send(`<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>${escapeHtml(ogTitle)}</title>
-  <meta name="description" content="${escapeHtml(ogDesc)}">
+            <div class="mt-8 pt-4 border-t border-slate-800 text-[11px] text-slate-500">
+              Được bảo vệ bởi <span class="text-emerald-400 font-semibold">BoclinkVN Cloaker</span>
+            </div>
+          </div>
 
-  <!-- OpenGraph cho Facebook / Zalo -->
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="${escapeHtml(shortUrl)}">
-  <meta property="og:title" content="${escapeHtml(ogTitle)}">
-  <meta property="og:description" content="${escapeHtml(ogDesc)}">
-  ${ogImg ? `<meta property="og:image" content="${escapeHtml(ogImg)}">` : ''}
-
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background-color: #0b101b;
-      color: #f1f5f9;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      padding: 16px;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-    .card {
-      width: 100%;
-      max-width: 380px;
-      background: #131b2e;
-      border: 1px solid rgba(51, 65, 85, 0.7);
-      border-radius: 24px;
-      padding: 24px;
-      text-align: center;
-      box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.5);
-    }
-    .spinner-box {
-      width: 64px;
-      height: 64px;
-      margin: 0 auto 16px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #06557c, #32af5e);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      box-shadow: 0 8px 20px rgba(50, 175, 94, 0.3);
-      animation: bounce 1.5s infinite;
-    }
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-6px); }
-    }
-    h2 {
-      font-size: 18px;
-      font-weight: 700;
-      color: #ffffff;
-      margin-bottom: 8px;
-    }
-    p.desc {
-      font-size: 13px;
-      color: #94a3b8;
-      margin-bottom: 20px;
-      line-height: 1.4;
-    }
-    .btn-app {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      width: 100%;
-      padding: 14px 16px;
-      background: linear-gradient(90deg, #06557c, #32af5e);
-      color: #ffffff;
-      font-weight: 700;
-      font-size: 15px;
-      border-radius: 16px;
-      text-decoration: none;
-      box-shadow: 0 8px 20px rgba(6, 85, 124, 0.35);
-      transition: opacity 0.2s, transform 0.1s;
-      animation: pulse 2s infinite;
-    }
-    .btn-app:active {
-      transform: scale(0.97);
-    }
-    @keyframes pulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(50, 175, 94, 0.4); }
-      50% { box-shadow: 0 0 0 10px rgba(50, 175, 94, 0); }
-    }
-    .btn-web {
-      display: block;
-      width: 100%;
-      margin-top: 10px;
-      padding: 12px 16px;
-      background: rgba(30, 41, 59, 0.8);
-      color: #cbd5e1;
-      font-size: 12px;
-      font-weight: 600;
-      border: 1px solid rgba(51, 65, 85, 0.8);
-      border-radius: 14px;
-      text-decoration: none;
-    }
-    .tip-box {
-      margin-top: 16px;
-      padding: 12px;
-      background: rgba(59, 130, 246, 0.1);
-      border: 1px solid rgba(59, 130, 246, 0.25);
-      border-radius: 14px;
-      color: #93c5fd;
-      font-size: 11px;
-      text-align: left;
-      line-height: 1.4;
-    }
-    .footer {
-      margin-top: 20px;
-      padding-top: 12px;
-      border-top: 1px solid rgba(51, 65, 85, 0.4);
-      font-size: 10px;
-      color: #64748b;
-    }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <div class="spinner-box">
-      ${deeplink.platform.includes('TikTok') ? '🎵' : (deeplink.platform.includes('Shopee') ? '🛍️' : '🚀')}
-    </div>
-    <h2>Đang mở App ${escapeHtml(deeplink.platform)}...</h2>
-    <p class="desc">
-      Đang tự động chuyển hướng vào ứng dụng <b style="color: #38bdf8;">${escapeHtml(deeplink.platform)}</b> trên thiết bị của bạn.
-    </p>
-
-    <a id="btnOpenApp" href="#" class="btn-app">
-      <span>MỞ TRONG APP ${escapeHtml(deeplink.platform).toUpperCase()}</span>
-      <span>➔</span>
-    </a>
-
-    <a id="btnWebFallback" href="${escapeHtml(destination)}" class="btn-web">
-      Tiếp tục xem trên Web
-    </a>
-
-    <div id="inAppTip" class="tip-box" style="display: none;">
-      💡 <b>Mẹo:</b> Nếu Facebook chặn mở App, hãy bấm nút <b>"MỞ TRONG APP"</b> ở trên hoặc bấm dấu <b>•••</b> góc trên bên phải chọn <b>"Mở trong trình duyệt"</b>.
-    </div>
-
-    <div class="footer">
-      Bảo vệ bởi BoclinkVN Smart Deeplink
-    </div>
-  </div>
-
-  <script>
-    (function() {
-      var iosScheme = ${JSON.stringify(deeplink.iosScheme || null)};
-      var iosAltScheme = ${JSON.stringify(deeplink.iosAltScheme || null)};
-      var androidIntent = ${JSON.stringify(deeplink.androidIntent || null)};
-      var androidScheme = ${JSON.stringify(deeplink.androidScheme || null)};
-      var webUrl = ${JSON.stringify(destination)};
-
-      var ua = navigator.userAgent || '';
-      var isIOS = /iPhone|iPad|iPod/i.test(ua);
-      var isAndroid = /Android/i.test(ua);
-      var isInApp = /FBAN|FBIOS|FB4A|FB_IAB|Zalo|Instagram/i.test(ua);
-
-      var targetScheme = webUrl;
-      if (isIOS) {
-        targetScheme = iosScheme || iosAltScheme || webUrl;
-      } else if (isAndroid) {
-        targetScheme = androidIntent || androidScheme || webUrl;
-      }
-
-      var btn = document.getElementById('btnOpenApp');
-      if (btn) btn.href = targetScheme;
-
-      if (isInApp) {
-        var tip = document.getElementById('inAppTip');
-        if (tip) tip.style.display = 'block';
-      }
-
-      function tryOpen() {
-        if (isAndroid) {
-          window.location.href = targetScheme;
-          setTimeout(function() {
-            if (!document.hidden && androidScheme && androidScheme !== targetScheme) {
-              window.location.href = androidScheme;
-            }
-          }, 600);
-        } else if (isIOS) {
-          window.location.href = targetScheme;
-          setTimeout(function() {
-            if (iosAltScheme && !document.hidden) {
-              window.location.href = iosAltScheme;
-            }
-          }, 600);
-        }
-      }
-
-      // Kích hoạt ngay
-      tryOpen();
-    })();
-  </script>
-</body>
-</html>`);
-      }
-
-      // 3. Chuyển hướng trực tiếp 302 (Áp dụng cho Desktop hoặc các link web thông thường)
-      res.writeHead(302, {
-        'Location': destination,
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'X-Content-Type-Options': 'nosniff',
-        'Content-Length': '0'
-      });
-      return res.end();
+          <script>
+            setTimeout(function() {
+              window.location.replace(${JSON.stringify(destination)});
+            }, 800);
+          </script>
+        </body>
+        </html>
+      `);
     } catch (error: any) {
       return res.status(500).send('Lỗi chuyển hướng liên kết');
     }
